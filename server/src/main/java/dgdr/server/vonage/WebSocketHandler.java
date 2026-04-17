@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import dgdr.server.vonage.user.domain.User;
 import dgdr.server.vonage.user.infra.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
@@ -27,7 +28,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class WebSocketHandler extends BinaryWebSocketHandler {
@@ -38,14 +41,22 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
     private final UserRepository userRepository;
     private final CallRepository callRepository;
     private final CallRecordRepository callRecordRepository;
-    private Call call;
-    private String callerPhone;
+    private final AtomicReference<CallSession> activeCallSession = new AtomicReference<>();
+    private final String clovaInvokeUrl;
+    private final String clovaSecretKey;
 
     @Autowired
-    public WebSocketHandler(CallRepository callRepository, CallRecordRepository callRecordRepository, UserRepository userRepository) {
+    public WebSocketHandler(CallRepository callRepository, 
+                            CallRecordRepository callRecordRepository, 
+                            UserRepository userRepository,
+                            @Value("${clova.speech.invoke-url") String clovaInvokeUrl,
+                            @Value("${clova.speech.secret-key") String clovaSecretKey) {
         this.userRepository = userRepository;
         this.callRepository = callRepository;
         this.callRecordRepository = callRecordRepository;
+        this.clovaInvokeUrl = clovaInvokeUrl;
+        this.clovaSecretKey = clovaSecretKey;
+        
         scheduler.scheduleAtFixedRate(this::saveAndSendAudioToFile, 3, 5, TimeUnit.SECONDS);
     }
 
@@ -76,26 +87,31 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         System.out.println("New WebSocket connection established: " + getCallerIdFromSession(session));
         super.afterConnectionEstablished(session);
+
         String phoneNumber = getCallerIdFromSession(session);
 
-        User user = userRepository.findById("wjdwodnr").get();
+        CallSession callSession = activeCallSession.updateAndGet(
+                existing -> existing != null ? existing : new CallSession()
+        );
 
-        // 수보요원 아니면 수신자로 설정
-        if (!user.getPhone().equals(phoneNumber)) {
-            callerPhone = phoneNumber;
+        Optional<User> agentUser = userRepository.findByPhone(phoneNumber);
+        if (agentUser.isPresent()) {
+            User user = agentUser.get();
+            callSession.setAgentUserId(user.getUserId());
+            if (callSession.getCall() == null) {
+                Call call = Call.builder()
+                        .user(user)
+                        .startTime(LocalDateTime.now())
+                        .build();
+                callRepository.save(call);
+                callSession.setCall(call);
+            }
+        } else {
+            callSession.setCallerPhone(phoneNumber);
         }
 
-        // 수보요원이면 call 생성
-        else {
-            call = Call.builder()
-                    .user(user)
-                    .startTime(LocalDateTime.now())
-                    .build();
-
-            callRepository.save(call);
-        }
-
-        ConcurrentWebSocketSessionDecorator decoratorSession = new ConcurrentWebSocketSessionDecorator(session, 10, 1024*1024);
+        ConcurrentWebSocketSessionDecorator decoratorSession =
+                new ConcurrentWebSocketSessionDecorator(session, 10, 1024*1024);
         createNewAudioFile(session.getId(), phoneNumber);
         sessionMap.put(session.getId(), decoratorSession);
     }
@@ -106,6 +122,9 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
         sessionAudioDataMap.remove(session.getId());
         sessionAudioFileMap.remove(session.getId());
         sessionMap.remove(session.getId());
+        if (sessionMap.isEmpty()) {
+            activeCallSession.set(null);
+        }
     }
 
     private void saveAndSendAudioToFile() {
@@ -192,8 +211,8 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
 
     private Mono<String> sendToClovaSTT(byte[] wavData) {
         WebClient clovaClient = WebClient.builder()
-                .baseUrl(Constants.CLOVA_SPEECH_INVOKE_URL)
-                .defaultHeader("X-CLOVASPEECH-API-KEY", Constants.CLOVA_SPEECH_SECRET_KEY)
+                .baseUrl(clovaInvokeUrl)
+                .defaultHeader("X-CLOVASPEECH-API-KEY", clovaSecretKey)
                 .build();
 
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
@@ -249,12 +268,17 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
     }
 
     private void saveConversation(ConcurrentWebSocketSessionDecorator session, String transcription) {
+        CallSession cs = activeCallSession.get();
+        if (cs == null || cs.getCall() == null) {
+            System.err.println("No active CallSession — skipping save");
+            return;
+        }
+
         CallRecord callRecord = CallRecord.builder()
-                .call(call)
+                .call(cs.getCall())
                 .transcription(transcription)
                 .speakerPhoneNumber(getCallerIdFromSession(session.getDelegate()))
                 .build();
-
         callRecordRepository.save(callRecord);
     }
 }

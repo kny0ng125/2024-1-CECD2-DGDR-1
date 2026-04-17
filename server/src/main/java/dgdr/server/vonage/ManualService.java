@@ -2,11 +2,12 @@ package dgdr.server.vonage;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sagemakerruntime.SageMakerRuntimeClient;
 import software.amazon.awssdk.services.sagemakerruntime.model.InvokeEndpointRequest;
 import software.amazon.awssdk.services.sagemakerruntime.model.InvokeEndpointResponse;
@@ -20,25 +21,38 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ManualService {
     private final CallService callService;
+    private final SageMakerRuntimeClient sagemakerRuntimeClient;
+    private final String endpointName;
+    private final String agentPhone;
+
+    public ManualService(
+            CallService callService,
+            @Value("${aws.access-key}") String awsAccessKey,
+            @Value("${aws.secret-key}") String awsSecretKey,
+            @Value("${aws.region}") String awsRegion,
+            @Value("${aws.sagemaker.endpoint-name}") String endpointName,
+            @Value("${server.agent-phone}") String agentPhone) {
+        this.callService = callService;
+        this.endpointName = endpointName;
+        this.agentPhone = agentPhone;
+        AwsBasicCredentials creds = AwsBasicCredentials.create(awsAccessKey, awsSecretKey);
+        this.sagemakerRuntimeClient = SageMakerRuntimeClient.builder()
+                .region(Region.of(awsRegion))
+                .credentialsProvider(StaticCredentialsProvider.create(creds))
+                .build();
+    }
 
     public Map<String, Object> getManual(Long callId) {
         List<CallRecordDto> conversations = callService.getCallRecord(callId);
         String formattedTranscript = formatConversations(conversations);
 
-        AwsBasicCredentials awsCreds = AwsBasicCredentials.create(Constants.AWS_ACCESS_KEY, Constants.AWS_SECRET_KEY);
-        SageMakerRuntimeClient sagemakerRuntimeClient = SageMakerRuntimeClient.builder()
-                .region(Constants.REGION)
-                .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
-                .build();
-
         String jsonInput = String.format("{\"text\": \"%s\"}", formattedTranscript);
 //        System.out.println("jsonInput = " + formattedTranscript);
 
         InvokeEndpointRequest request = InvokeEndpointRequest.builder()
-                .endpointName(Constants.ENDPOINT_NAME)
+                .endpointName(endpointName)
                 .contentType("application/json")
                 .body(SdkBytes.fromString(jsonInput, StandardCharsets.UTF_8))
                 .build();
@@ -64,7 +78,7 @@ public class ManualService {
     private String formatConversations(List<CallRecordDto> callRecordDtos) {
         return callRecordDtos.stream()
                 .map(callRecord -> {
-                    if (callRecord.getSpeakerPhoneNumber().equals(Constants.PHONE)) {
+                    if (callRecord.getSpeakerPhoneNumber().equals(agentPhone)) {
                         return "상황실: " + callRecord.getTranscription();
                     } else {
                         return "신고자: " + callRecord.getTranscription();
