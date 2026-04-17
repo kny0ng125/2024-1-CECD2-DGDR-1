@@ -10,4 +10,5 @@ public class CallSession {
     private Call call;
     private String callerPhone;
     private String agentUserId;
+    private String agentSessionId;
 }

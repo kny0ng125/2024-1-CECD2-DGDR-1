@@ -2,10 +2,8 @@ package dgdr.server.vonage;
 
 import dgdr.server.vonage.user.domain.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -25,6 +23,13 @@ public class Call {
     @CreatedDate
     @Column(name = "start_time")
     private LocalDateTime startTime;
+
+    @Column(name = "end_time")
+    private LocalDateTime endTime;
+
+    public void endCall() {
+        this.endTime = LocalDateTime.now();
+    }
 
     @ManyToOne
     @JoinColumn(name = "user_id")

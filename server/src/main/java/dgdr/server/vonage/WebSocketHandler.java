@@ -49,8 +49,8 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
     public WebSocketHandler(CallRepository callRepository, 
                             CallRecordRepository callRecordRepository, 
                             UserRepository userRepository,
-                            @Value("${clova.speech.invoke-url") String clovaInvokeUrl,
-                            @Value("${clova.speech.secret-key") String clovaSecretKey) {
+                            @Value("${clova.speech.invoke-url}") String clovaInvokeUrl,
+                            @Value("${clova.speech.secret-key}") String clovaSecretKey) {
         this.userRepository = userRepository;
         this.callRepository = callRepository;
         this.callRecordRepository = callRecordRepository;
@@ -98,6 +98,7 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
         if (agentUser.isPresent()) {
             User user = agentUser.get();
             callSession.setAgentUserId(user.getUserId());
+            callSession.setAgentSessionId(session.getId());
             if (callSession.getCall() == null) {
                 Call call = Call.builder()
                         .user(user)
@@ -122,7 +123,14 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
         sessionAudioDataMap.remove(session.getId());
         sessionAudioFileMap.remove(session.getId());
         sessionMap.remove(session.getId());
-        if (sessionMap.isEmpty()) {
+
+        CallSession cs = activeCallSession.get();
+        if( cs != null && session.getId().equals(cs.getAgentSessionId())){
+            Call call = cs.getCall();
+            if(call != null) {
+                call.endCall();
+                callRepository.save(call);
+            }
             activeCallSession.set(null);
         }
     }
