@@ -16,8 +16,11 @@ public class VonageController {
 
     @PostMapping("/answer")
     public Ncco answerWebhook(@RequestBody AnswerWebhookPayload payload) {
-        String from = payload.getFrom();
-        return vonageService.createOrJoinConversationWithWebSocket(from);
+        return vonageService.createOrJoinConversationWithWebSocket(
+                payload.getFrom(),          // caller phone
+                payload.getTo(),            // agent's dedicated Vonage number
+                payload.getConversation_uuid()
+        );
     }
 
     @PostMapping("/event")

@@ -2,7 +2,6 @@ package dgdr.server.vonage;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import dgdr.server.vonage.user.domain.User;
 import dgdr.server.vonage.user.infra.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,26 +27,25 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class WebSocketHandler extends BinaryWebSocketHandler {
     private final ConcurrentMap<String, ConcurrentWebSocketSessionDecorator> sessionMap = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ByteArrayOutputStream> sessionAudioDataMap = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final ConcurrentMap<String, File> sessionAudioFileMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, CallSession> sessionDataMap = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
     private final UserRepository userRepository;
     private final CallRepository callRepository;
     private final CallRecordRepository callRecordRepository;
-    private final AtomicReference<CallSession> activeCallSession = new AtomicReference<>();
     private final String clovaInvokeUrl;
     private final String clovaSecretKey;
 
     @Autowired
-    public WebSocketHandler(CallRepository callRepository, 
-                            CallRecordRepository callRecordRepository, 
+    public WebSocketHandler(CallRepository callRepository,
+                            CallRecordRepository callRecordRepository,
                             UserRepository userRepository,
                             @Value("${clova.speech.invoke-url}") String clovaInvokeUrl,
                             @Value("${clova.speech.secret-key}") String clovaSecretKey) {
@@ -56,7 +54,7 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
         this.callRecordRepository = callRecordRepository;
         this.clovaInvokeUrl = clovaInvokeUrl;
         this.clovaSecretKey = clovaSecretKey;
-        
+
         scheduler.scheduleAtFixedRate(this::saveAndSendAudioToFile, 3, 5, TimeUnit.SECONDS);
     }
 
@@ -79,74 +77,104 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) {
-        String payload = message.getPayload();
-        System.out.println("Received text message: " + payload);
+        System.out.println("Received text message: " + message.getPayload());
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        System.out.println("New WebSocket connection established: " + getCallerIdFromSession(session));
         super.afterConnectionEstablished(session);
 
-        String phoneNumber = getCallerIdFromSession(session);
+        String callerId = getQueryParam(session, "caller-id");
+        String agentPhone = getQueryParam(session, "agent-phone");
+        String conversationUuid = getQueryParam(session, "conversation-uuid");
 
-        CallSession callSession = activeCallSession.updateAndGet(
-                existing -> existing != null ? existing : new CallSession()
-        );
+        System.out.println("WS connected. callerId=" + callerId
+                + " agentPhone=" + agentPhone
+                + " conversationUuid=" + conversationUuid);
 
-        Optional<User> agentUser = userRepository.findByPhone(phoneNumber);
-        if (agentUser.isPresent()) {
-            User user = agentUser.get();
-            callSession.setAgentUserId(user.getUserId());
-            callSession.setAgentSessionId(session.getId());
-            if (callSession.getCall() == null) {
-                Call call = Call.builder()
-                        .user(user)
-                        .startTime(LocalDateTime.now())
-                        .build();
-                callRepository.save(call);
-                callSession.setCall(call);
-            }
-        } else {
-            callSession.setCallerPhone(phoneNumber);
+        if (conversationUuid == null) {
+            System.err.println("No conversation-uuid on WS; closing " + session.getId());
+            session.close(CloseStatus.BAD_DATA);
+            return;
         }
 
-        ConcurrentWebSocketSessionDecorator decoratorSession =
-                new ConcurrentWebSocketSessionDecorator(session, 10, 1024*1024);
-        createNewAudioFile(session.getId(), phoneNumber);
-        sessionMap.put(session.getId(), decoratorSession);
+        CallSession cs = sessionDataMap.computeIfAbsent(conversationUuid, uuid -> {
+            CallSession s = new CallSession();
+            s.setConversationUuid(uuid);
+            s.setAgentPhone(agentPhone);
+
+            if (agentPhone != null) {
+                userRepository.findByPhone(agentPhone).ifPresent(user -> {
+                    s.setAgentUserId(user.getUserId());
+                    Call call = Call.builder()
+                            .user(user)
+                            .startTime(LocalDateTime.now())
+                            .build();
+                    callRepository.save(call);
+                    s.setCall(call);
+                });
+            }
+            return s;
+        });
+
+        if (agentPhone != null && agentPhone.equals(callerId)) {
+            cs.setAgentWsSessionId(session.getId());
+        } else {
+            cs.setCallerPhone(callerId);
+            cs.setCallerWsSessionId(session.getId());
+        }
+
+        ConcurrentWebSocketSessionDecorator decorator =
+                new ConcurrentWebSocketSessionDecorator(session, 10, 1024 * 1024);
+        sessionMap.put(session.getId(), decorator);
+
+        createNewAudioFile(session.getId(), callerId != null ? callerId : "unknown");
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         super.afterConnectionClosed(session, status);
+        sessionMap.remove(session.getId());
         sessionAudioDataMap.remove(session.getId());
         sessionAudioFileMap.remove(session.getId());
-        sessionMap.remove(session.getId());
 
-        CallSession cs = activeCallSession.get();
-        if( cs != null && session.getId().equals(cs.getAgentSessionId())){
-            Call call = cs.getCall();
-            if(call != null) {
+        CallSession owning = null;
+        for (CallSession cs : sessionDataMap.values()) {
+            if (session.getId().equals(cs.getAgentWsSessionId())
+                    || session.getId().equals(cs.getCallerWsSessionId())) {
+                owning = cs;
+                break;
+            }
+        }
+        if (owning == null) return;
+
+        if (session.getId().equals(owning.getAgentWsSessionId())) {
+            owning.setAgentWsSessionId(null);
+        } else if (session.getId().equals(owning.getCallerWsSessionId())) {
+            owning.setCallerWsSessionId(null);
+        }
+
+        if (owning.getAgentWsSessionId() == null && owning.getCallerWsSessionId() == null) {
+            Call call = owning.getCall();
+            if (call != null) {
                 call.endCall();
                 callRepository.save(call);
             }
-            activeCallSession.set(null);
+            sessionDataMap.remove(owning.getConversationUuid());
         }
     }
 
     private void saveAndSendAudioToFile() {
         for (ConcurrentWebSocketSessionDecorator session : sessionMap.values()) {
-            if (!session.isOpen()) {
-                continue;
-            }
+            if (!session.isOpen()) continue;
 
-            byte[] audioData;
-            audioData = sessionAudioDataMap.get(session.getId()).toByteArray();
-            sessionAudioDataMap.get(session.getId()).reset();
+            ByteArrayOutputStream buf = sessionAudioDataMap.get(session.getId());
+            if (buf == null) continue;
+
+            byte[] audioData = buf.toByteArray();
+            buf.reset();
 
             if (audioData.length > 0) {
-                System.out.println("Saving audio data to file...");
                 try {
                     appendToWavFile(audioData, sessionAudioFileMap.get(session.getId()));
                 } catch (IOException e) {
@@ -160,7 +188,7 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
     private void processAudioFile(ConcurrentWebSocketSessionDecorator session) {
         try {
             File audioFile = sessionAudioFileMap.get(session.getId());
-            if (audioFile.exists() && audioFile.length() > 0) {
+            if (audioFile != null && audioFile.exists() && audioFile.length() > 0) {
                 byte[] audioData = Files.readAllBytes(audioFile.toPath());
 
                 sendToClovaSTT(audioData).subscribe(result -> {
@@ -168,7 +196,6 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
                         saveConversation(session, result);
                         System.out.println("Transcription result: \n" + result);
                     }
-
                     String callerId = getCallerIdFromSession(session.getDelegate());
                     createNewAudioFile(session.getId(), callerId);
                 }, error -> {
@@ -183,15 +210,14 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
 
     private void createNewAudioFile(String sessionId, String callerId) {
         File audioDir = new File("audio");
-        if (!audioDir.exists()) {
-            audioDir.mkdirs();
-        }
+        if (!audioDir.exists()) audioDir.mkdirs();
         String timeStamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         File audioFile = new File(audioDir, "audio_" + callerId + "_" + timeStamp + ".wav");
         sessionAudioFileMap.put(sessionId, audioFile);
     }
 
     private void appendToWavFile(byte[] audioData, File file) throws IOException {
+        if (file == null) return;
         boolean append = file.exists();
         int bufferSize = 16384;
         try (FileOutputStream fos = new FileOutputStream(file, append);
@@ -234,13 +260,10 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
                     "completion": "sync",
                     "noiseFiltering": true,
                     "fullText": true,
-                    "diarization": {
-                        "enable": false
-                    }
+                    "diarization": { "enable": false }
                 }
                 """;
-        builder.part("params", paramsJson)
-                .contentType(MediaType.APPLICATION_JSON);
+        builder.part("params", paramsJson).contentType(MediaType.APPLICATION_JSON);
 
         return clovaClient.post()
                 .uri("/recognizer/upload")
@@ -248,7 +271,6 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(response -> {
-                    System.out.println("Full Response: " + response);
                     JsonObject jsonObject = JsonParser.parseString(response).getAsJsonObject();
                     return jsonObject.get("text").getAsString();
                 })
@@ -258,27 +280,31 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
                 });
     }
 
-    private String getCallerIdFromSession(WebSocketSession session) {
-        String callerId = "unknown";
-
+    private String getQueryParam(WebSocketSession session, String name) {
         URI uri = session.getUri();
-        String query = uri.getQuery();
-        if (query != null) {
-            for (String param : query.split("&")) {
-                String[] keyValue = param.split("=");
-                if (keyValue.length == 2 && keyValue[0].equals("caller-id")) {
-                    callerId = URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8);
-                    break;
-                }
+        if (uri == null || uri.getQuery() == null) return null;
+        for (String p : uri.getQuery().split("&")) {
+            String[] kv = p.split("=", 2);
+            if (kv.length == 2 && kv[0].equals(name)) {
+                return URLDecoder.decode(kv[1], StandardCharsets.UTF_8);
             }
         }
-        return callerId;
+        return null;
+    }
+
+    private String getCallerIdFromSession(WebSocketSession session) {
+        String v = getQueryParam(session, "caller-id");
+        return v != null ? v : "unknown";
     }
 
     private void saveConversation(ConcurrentWebSocketSessionDecorator session, String transcription) {
-        CallSession cs = activeCallSession.get();
+        String wsId = session.getId();
+        CallSession cs = sessionDataMap.values().stream()
+                .filter(s -> wsId.equals(s.getAgentWsSessionId()) || wsId.equals(s.getCallerWsSessionId()))
+                .findFirst().orElse(null);
+
         if (cs == null || cs.getCall() == null) {
-            System.err.println("No active CallSession — skipping save");
+            System.err.println("No CallSession for WS " + wsId + " — skipping save");
             return;
         }
 

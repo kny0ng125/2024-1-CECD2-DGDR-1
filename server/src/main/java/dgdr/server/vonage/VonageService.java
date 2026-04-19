@@ -30,8 +30,13 @@ public class VonageService {
     }
 
     // 통화 및 WebSocket 연결
-    public Ncco createOrJoinConversationWithWebSocket(String callerId) {
-        String websocketUri = String.format("wss://%s/ws/audio?caller-id=%s", publicUrl, callerId);
+    public Ncco createOrJoinConversationWithWebSocket(String callerId,
+                                                      String agentPhone,
+                                                      String conversationUuid) {
+        String websocketUri = String.format(
+                "wss://%s/ws/audio?caller-id=%s&agent-phone=%s&conversation-uuid=%s",
+                publicUrl, callerId, agentPhone, conversationUuid
+        );
         ConversationAction conversationAction = ConversationAction.builder(ConferenceName)
                 .startOnEnter(true)
                 .build();
