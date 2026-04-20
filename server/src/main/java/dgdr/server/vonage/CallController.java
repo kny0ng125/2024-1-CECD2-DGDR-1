@@ -1,6 +1,8 @@
 package dgdr.server.vonage;
 
 import dgdr.server.vonage.user.domain.PrincipalDetails;
+import dgdr.server.vonage.clova.CallTranscriptCache;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CallController {
     private final CallService callService;
+    private final CallTranscriptCache transcriptCache;
 
     @GetMapping("/api/v1/call")
     public ResponseEntity<List<CallDto>> getCallList(
@@ -48,5 +51,11 @@ public class CallController {
     public ResponseEntity<List<CallRecordDto>> getCallRecord(@PathVariable Long callId) {
         List<CallRecordDto> callRecord = callService.getCallRecord(callId);
         return ResponseEntity.ok(callRecord);
+    }
+
+    @GetMapping(value = "/api/v1/call/{callId}/transcript/stream",
+            produces = "text/event-stream")
+    public SseEmitter streamTranscript(@PathVariable Long callId) {
+        return transcriptCache.subscribe(callId);
     }
 }

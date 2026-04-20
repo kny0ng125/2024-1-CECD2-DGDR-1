@@ -1,4 +1,6 @@
 package dgdr.server.vonage.clova;
 
-public class SttResult {
-}
+public record SttResult(
+        String text,
+        boolean isFinal
+) {}
