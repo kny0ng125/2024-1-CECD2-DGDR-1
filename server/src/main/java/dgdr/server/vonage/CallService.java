@@ -65,4 +65,12 @@ public class CallService {
                         .build())
                 .collect(Collectors.toList());
     }
+
+    public void assertOwnership(Long callId, String agentUserId) {
+        Call call = callRepository.findById(callId)
+                .orElseThrow(() -> new IllegalArgumentException("Call not found: " + callId));
+        if (call.getUser() == null || !agentUserId.equals(call.getUser().getUserId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Not your call");
+        }
+    }
 }

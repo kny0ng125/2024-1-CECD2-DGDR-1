@@ -55,7 +55,11 @@ public class CallController {
 
     @GetMapping(value = "/api/v1/call/{callId}/transcript/stream",
             produces = "text/event-stream")
-    public SseEmitter streamTranscript(@PathVariable Long callId) {
+    public SseEmitter streamTranscript(
+            @PathVariable Long callId,
+            @AuthenticationPrincipal PrincipalDetails principalDetails
+    ) {
+        callService.assertOwnership(callId, principalDetails.getUsername());
         return transcriptCache.subscribe(callId);
     }
 }
