@@ -2,6 +2,7 @@ package dgdr.server.vonage;
 
 import com.vonage.client.voice.ncco.Ncco;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,6 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
+@Profile("!dev")
 public class VonageController {
     private final VonageService vonageService;
     private final ManualService manualService;

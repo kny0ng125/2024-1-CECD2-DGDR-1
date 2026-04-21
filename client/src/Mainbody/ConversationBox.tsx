@@ -26,7 +26,7 @@ const isAgent = (record: CallRecord): boolean =>
   record.speakerPhoneNumber === record.call?.user?.phoneNumber
 
 const ConversationBox = () => {
-  const { setCallId } = useCallStore()
+  useCallStore()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -65,9 +65,7 @@ const ConversationBox = () => {
           }),
         }))
       )
-      if (data.length > 0 && data[0].call) {
-        setCallId(data[0].call.id)
-      }
+      // TODO 03: 실시간 통화 상태 관리로 대체 예정
       setError(null)
     } catch (err) {
       console.error('Fetch error:', err)

@@ -4,7 +4,6 @@ import com.nbp.cdncp.nest.grpc.proto.v1.NestRequest;
 import dgdr.server.vonage.clova.CallTranscriptCache;
 import dgdr.server.vonage.clova.ClovaStreamingClient;
 import dgdr.server.vonage.clova.SttResult;
-import dgdr.server.vonage.clova.TranscriptEntry;
 import dgdr.server.vonage.user.infra.UserRepository;
 import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -33,19 +31,19 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
 
     private final UserRepository userRepository;
     private final CallRepository callRepository;
-    private final CallRecordRepository callRecordRepository;
+    private final CallService callService;
     private final ClovaStreamingClient clovaStreamingClient;
     private final CallTranscriptCache transcriptCache;
 
     @Autowired
     public WebSocketHandler(CallRepository callRepository,
-                            CallRecordRepository callRecordRepository,
+                            CallService callService,
                             UserRepository userRepository,
                             ClovaStreamingClient clovaStreamingClient,
                             CallTranscriptCache transcriptCache) {
         this.userRepository = userRepository;
         this.callRepository = callRepository;
-        this.callRecordRepository = callRecordRepository;
+        this.callService = callService;
         this.clovaStreamingClient = clovaStreamingClient;
         this.transcriptCache = transcriptCache;
     }
@@ -163,23 +161,7 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
         if (owning.getAgentWsSessionId() == null && owning.getCallerWsSessionId() == null) {
             Call call = owning.getCall();
             if (call != null) {
-                // 1) 캐시의 final 엔트리를 DB에 일괄 저장
-                List<TranscriptEntry> finals = transcriptCache.finalEntries(call.getId());
-                for (TranscriptEntry e : finals) {
-                    CallRecord rec = CallRecord.builder()
-                            .call(call)
-                            .transcription(e.text())
-                            .speakerPhoneNumber(e.speakerPhone())
-                            .build();
-                    callRecordRepository.save(rec);
-                }
-
-                // 2) 통화 종료 처리
-                call.endCall();
-                callRepository.save(call);
-
-                // 3) SSE 구독자 end + 캐시 정리
-                transcriptCache.close(call.getId());
+                callService.finalizeCall(call.getId());
             }
             sessionDataMap.remove(owning.getConversationUuid());
         }

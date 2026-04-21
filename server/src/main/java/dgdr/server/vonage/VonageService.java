@@ -6,9 +6,11 @@ import com.vonage.client.voice.ncco.ConversationAction;
 import com.vonage.client.voice.ncco.Ncco;
 import com.vonage.client.voice.ncco.WebSocketEndpoint;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
+@Profile("!dev")
 public class VonageService {
     private final VonageClient vonageClient;
     private final String publicUrl;
