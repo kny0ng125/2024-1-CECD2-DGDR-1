@@ -53,22 +53,31 @@ const ConversationBox = () => {
     boot()
   }, [])
 
-  // SSE 구독: callId가 세팅되면 스트림 연결
+  // SSE 구독: callId가 세팅되면 스트림 연결 (서버 TranscriptEntry 스키마)
   useEffect(() => {
     if (!callId) return
+    setConversations([])
     const url = buildSseUrl(`/api/v1/call/${callId}/transcript/stream`)
     const es = new EventSource(url)
     esRef.current = es
 
+    let idx = 0
     es.addEventListener('transcript', (e) => {
-      const record = JSON.parse((e as MessageEvent).data)
+      const entry = JSON.parse((e as MessageEvent).data) as {
+        speaker: 'agent' | 'caller'
+        text: string
+        isFinal: boolean
+        timestamp: string
+      }
+      if (!entry.isFinal) return
+      const nextId = idx++
       setConversations((prev) => [
         ...prev,
         {
-          id: record.id,
-          text: record.transcription,
-          sender: record.isAgent ? 'agent' : 'patient',
-          time: new Date(record.time).toLocaleTimeString([], {
+          id: nextId,
+          text: entry.text,
+          sender: entry.speaker === 'agent' ? 'agent' : 'patient',
+          time: new Date(entry.timestamp).toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
           }),

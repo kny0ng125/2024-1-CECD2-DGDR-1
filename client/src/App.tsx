@@ -8,6 +8,7 @@ import CallHistory from './History/CallHistory'
 import HospitalPage from './Hospital/HospitalPage'
 import NavbarForm from './Navbar'
 import { useHotkey } from './hooks/useHotkey'
+import FakeCallPanel from './dev/FakeCallPanel'
 
 function AppRoutes() {
   const navigate = useNavigate()
@@ -37,6 +38,7 @@ function AppRoutes() {
         />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      {import.meta.env.DEV && <FakeCallPanel />}
     </>
   )
 }
