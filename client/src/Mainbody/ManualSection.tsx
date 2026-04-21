@@ -2,17 +2,15 @@ import { useState, useEffect } from 'react'
 import { useManualStore } from '@/stores/useManualStore'
 import { useCallStore } from '@/stores/useCallStore'
 import { useHotkey } from '@/hooks/useHotkey'
-import { API_BASE_URL } from '@/lib/config'
-
-interface ManualContent {
-  clinicalFeatures: string
-  patientAssessment: string
-}
+import { authFetch } from '@/lib/authFetch'
+import type { Manual } from '@/types/manual'
 
 interface CardItem {
   id: number
   passage: string
-  script: ManualContent
+  clinicalFeatures: string
+  patientAssessment: string
+  similarity: number
 }
 
 const ManualSection = () => {
@@ -28,23 +26,16 @@ const ManualSection = () => {
   const fetchAndProcessData = async () => {
     if (!callId) return
     try {
-      const response = await fetch(`${API_BASE_URL}/manual/${callId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-        },
-      })
+      const response = await authFetch(`/manual/${callId}`)
       if (!response.ok) throw new Error('Failed to fetch')
       const data = await response.json()
       // 유사도 내림차순 정렬 (02 PR에서 어댑터 정식 구현)
       const processed: CardItem[] = Object.values(data).map((passageData: any, index) => ({
         id: index + 1,
         passage: passageData['병명'],
-        script: {
-          clinicalFeatures: passageData['임상적 특징'],
-          patientAssessment: passageData['환자평가 필수항목'],
-        },
+        clinicalFeatures: passageData['임상적 특징'],
+        patientAssessment: passageData['환자평가 필수항목'],
+        similarity: passageData['유사도'] ?? 0,
       }))
       setCards(processed)
     } catch (err) {
@@ -53,7 +44,13 @@ const ManualSection = () => {
   }
 
   const handleCardClick = (card: CardItem) => {
-    const selected = { title: card.passage, content: card.script }
+    const selected: Manual = {
+      id: card.id,
+      title: card.passage,
+      similarity: card.similarity,
+      clinicalFeatures: card.clinicalFeatures,
+      patientAssessment: card.patientAssessment,
+    }
     selectManual(selected)
     setSelectedCardId(card.id)
     saveManual(selected)
@@ -83,12 +80,12 @@ const ManualSection = () => {
         <div className="flex-1 max-h-[1000px] overflow-y-auto p-5 bg-white rounded-[10px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
           <h4 className="mt-[30px] mb-[30px] font-bold text-[1.7em]">임상적 특징</h4>
           <p className="text-[1.3em] leading-[1.8] mt-[10px] text-[#333]">
-            {formatWithLineBreaks(selectedManual.content.clinicalFeatures)}
+            {formatWithLineBreaks(selectedManual.clinicalFeatures)}
           </p>
           <div className="mt-[80px]" />
           <h4 className="mt-[30px] mb-[30px] font-bold text-[1.7em]">환자평가 필수항목</h4>
           <p className="text-[1.3em] leading-[1.8] mt-[10px] text-[#333]">
-            {formatWithLineBreaks(selectedManual.content.patientAssessment)}
+            {formatWithLineBreaks(selectedManual.patientAssessment)}
           </p>
         </div>
       ) : (

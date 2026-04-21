@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_BASE_URL } from '@/lib/config'
+import { authFetch } from '@/lib/authFetch'
 
 const SignUpForm = () => {
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -23,18 +23,12 @@ const SignUpForm = () => {
 
   const checkAccountAvailability = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/user/auth/id/check?id=${account}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': 'true',
-          },
-        }
+      const response = await authFetch(
+        `/api/v1/user/auth/checkId?id=${encodeURIComponent(account)}`,
+        { method: 'GET', skipAuth: true }
       )
-      const data = await response.json()
-      setAccountValid(!data.isExist)
+      const isExist = await response.json()
+      setAccountValid(!isExist)
     } catch {
       setAccountValid(false)
     }
@@ -63,12 +57,9 @@ const SignUpForm = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/user/auth/signup`, {
+      const response = await authFetch('/api/v1/user/auth/signup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-        },
+        skipAuth: true,
         body: JSON.stringify({ id: account, name, password, phone: phoneNumber }),
       })
 

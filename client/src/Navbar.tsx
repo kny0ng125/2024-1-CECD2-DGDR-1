@@ -4,11 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useHotkey } from '@/hooks/useHotkey'
 
-interface NavbarFormProps {
-  onShowBedsModal: () => void
-}
-
-const NavbarForm = ({ onShowBedsModal }: NavbarFormProps) => {
+const NavbarForm = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { userId } = useAuthStore()
@@ -24,12 +20,11 @@ const NavbarForm = ({ onShowBedsModal }: NavbarFormProps) => {
     return () => clearInterval(id)
   }, [])
 
-  const isAuthPage =
-    location.pathname === '/login' || location.pathname === '/signup'
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup'
 
   useHotkey('shift+1', () => navigate('/history'))
   useHotkey('shift+2', () => navigate('/'))
-  useHotkey('shift+3', onShowBedsModal)
+  useHotkey('shift+3', () => navigate('/hospital'))
 
   return (
     <nav className="flex items-center px-5 py-[10px] bg-[#f8f9fa] border-b border-[#dee2e6]">
@@ -43,7 +38,7 @@ const NavbarForm = ({ onShowBedsModal }: NavbarFormProps) => {
           <div className="flex gap-[10px]">
             <Button variant="outline" onClick={() => navigate('/history')}>History</Button>
             <Button variant="outline" onClick={() => navigate('/')}>Main</Button>
-            <Button variant="danger" onClick={onShowBedsModal}>응급 병상 확인하기</Button>
+            <Button variant="danger" onClick={() => navigate('/hospital')}>응급 병상 확인하기</Button>
           </div>
           <span className="ml-auto text-base text-[#333]">
             {userId ?? '(미인증)'} 님 | 접속 시간: {currentTime}

@@ -2,17 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useCallStore } from '@/stores/useCallStore'
 import { useHotkey } from '@/hooks/useHotkey'
 import { Loader2 } from 'lucide-react'
-import { API_BASE_URL } from '@/lib/config'
-
-interface CallRecord {
-  transcription: string
-  speakerPhoneNumber: string
-  time: string
-  call?: {
-    id: number
-    user?: { phoneNumber: string }
-  }
-}
+import { authFetch, buildSseUrl } from '@/lib/authFetch'
 
 interface Conversation {
   id: number
@@ -21,60 +11,79 @@ interface Conversation {
   time: string
 }
 
-// 임시 어댑터 (02 PR에서 정식 구현)
-const isAgent = (record: CallRecord): boolean =>
-  record.speakerPhoneNumber === record.call?.user?.phoneNumber
-
 const ConversationBox = () => {
-  useCallStore()
+  const { callId, startCall } = useCallStore()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const conversationEndRef = useRef<HTMLDivElement>(null)
+  const esRef = useRef<EventSource | null>(null)
 
+  // 초기 로드: 최신 통화 기록 한 번만 fetch
   useEffect(() => {
-    fetchConversations()
-    const intervalId = setInterval(fetchConversations, 5000)
-    return () => clearInterval(intervalId)
+    const boot = async () => {
+      try {
+        const res = await authFetch('/api/v1/call/latest')
+        if (!res.ok) throw new Error(`API error: ${res.statusText}`)
+        const data = await res.json()
+        setConversations(
+          data.map((item: any, index: number) => ({
+            id: item.id ?? index + 1,
+            text: item.transcription,
+            sender:
+              item.speakerPhoneNumber === item.call?.user?.phoneNumber ? 'agent' : 'patient',
+            time: new Date(item.time).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          }))
+        )
+        if (data.length > 0 && data[0].call?.id) {
+          startCall(
+            data[0].call.id,
+            data[0].call.startTime ?? new Date().toISOString()
+          )
+        }
+      } catch (err) {
+        setError((err as Error).message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    boot()
   }, [])
+
+  // SSE 구독: callId가 세팅되면 스트림 연결
+  useEffect(() => {
+    if (!callId) return
+    const url = buildSseUrl(`/api/v1/call/${callId}/transcript/stream`)
+    const es = new EventSource(url)
+    esRef.current = es
+
+    es.addEventListener('transcript', (e) => {
+      const record = JSON.parse((e as MessageEvent).data)
+      setConversations((prev) => [
+        ...prev,
+        {
+          id: record.id,
+          text: record.transcription,
+          sender: record.isAgent ? 'agent' : 'patient',
+          time: new Date(record.time).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        },
+      ])
+    })
+
+    es.addEventListener('end', () => es.close())
+
+    return () => es.close()
+  }, [callId])
 
   useEffect(() => {
     conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [conversations])
-
-  const fetchConversations = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/call/latest`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-        },
-        credentials: 'same-origin',
-      })
-      if (!response.ok) throw new Error(`API error: ${response.statusText}`)
-      const data: CallRecord[] = await response.json()
-      setConversations(
-        data.map((item, index) => ({
-          id: index + 1,
-          text: item.transcription,
-          sender: isAgent(item) ? 'agent' : 'patient',
-          time: new Date(item.time).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-        }))
-      )
-      // TODO 03: 실시간 통화 상태 관리로 대체 예정
-      setError(null)
-    } catch (err) {
-      console.error('Fetch error:', err)
-      setError((err as Error).message)
-      setConversations([])
-    } finally {
-      setLoading(false)
-    }
-  }
 
   useHotkey('ctrl+alt+r', () => setConversations([]))
 

@@ -24,6 +24,63 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+
+    /* 상태 시맨틱 (HSL) */
+    --status-critical: 0 84% 60%;
+    --status-warning:  38 92% 50%;
+    --status-success:  158 64% 42%;
+    --status-info:     217 91% 60%;
+    --status-live:     333 80% 63%;
+
+    /* 화자 */
+    --speaker-agent:   217 91% 60%;
+    --speaker-patient: 215 16% 65%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --status-critical: 0 72% 55%;
+    --status-warning:  38 85% 50%;
+    --status-success:  158 60% 45%;
+    --status-info:     217 85% 60%;
+    --status-live:     333 75% 60%;
+  }
+
+  /* LIVE 펄스 — ConversationBox 헤더의 빨간 점 */
+  @keyframes live-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--status-live) / 0.6); }
+    50%      { box-shadow: 0 0 0 6px hsl(var(--status-live) / 0); }
+  }
+  .animate-live-pulse { animation: live-pulse 1.6s ease-out infinite; }
+
+  /* Partial 텍스트의 깜빡이는 커서 */
+  @keyframes blink-caret {
+    0%, 49%   { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+  .blink-caret::after {
+    content: '▍';
+    margin-left: 2px;
+    animation: blink-caret 1s steps(1) infinite;
   }
 }
 
@@ -33,7 +90,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Nanum Gothic', sans-serif;
+    font-family: 'Pretendard', 'Nanum Gothic', system-ui, sans-serif;
     font-size: 10px;
     margin: 0;
   }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
-import { API_BASE_URL } from '@/lib/config'
+import { authFetch } from '@/lib/authFetch'
 
 interface Call {
   id: number
@@ -15,7 +15,6 @@ interface CallRecord {
   call?: { user?: { phoneNumber: string } }
 }
 
-// 임시 어댑터 (02 PR에서 정식 구현)
 const isAgentRecord = (entry: CallRecord): boolean =>
   entry.speakerPhoneNumber === entry.call?.user?.phoneNumber
 
@@ -30,14 +29,8 @@ const CallHistory = () => {
   const fetchCallList = async (dateStr: string) => {
     setLoading(true)
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/call/date?startDate=${dateStr}&endDate=${dateStr}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': 'true',
-          },
-        }
+      const response = await authFetch(
+        `/api/v1/call/date?startDate=${dateStr}&endDate=${dateStr}`
       )
       const data = await response.json()
       setCallList(data)
@@ -52,12 +45,7 @@ const CallHistory = () => {
   const fetchCallDetails = async (callId: number) => {
     setLoading(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/${callId}/call-record`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-        },
-      })
+      const response = await authFetch(`/api/v1/${callId}/call-record`)
       const data = await response.json()
       setSelectedCall(data)
     } catch (err) {
@@ -88,7 +76,6 @@ const CallHistory = () => {
       <div className="w-[1000px] bg-white p-5 rounded-[10px] shadow-[0_4px_10px_rgba(0,0,0,0.1)] h-[80vh] overflow-y-auto">
         <h3 className="mb-10 pt-[10px] pb-[10px] border-t border-b border-[#ddd]">통화 기록</h3>
         <div className="mb-5">
-          {/* TODO: 다음 PR에서 shadcn DatePicker로 교체 */}
           <input
             type="date"
             value={selectedDate}

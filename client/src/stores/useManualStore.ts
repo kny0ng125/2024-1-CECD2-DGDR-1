@@ -1,28 +1,37 @@
-import { create } from 'zustand'
-
-interface ManualContent {
-  clinicalFeatures: string
-  patientAssessment: string
-}
-
-interface Manual {
-  title: string
-  content: ManualContent
-}
+import { create } from 'zustand';
+import { Manual } from '@/types/manual';
 
 interface ManualState {
-  savedManuals: Manual[]
-  selectedManual: Manual | null
-  saveManual: (manual: Manual) => void
-  selectManual: (manual: Manual) => void
+  manuals: Manual[];
+  selectedManual: Manual | null;
+  savedManuals: Manual[];
+  checklistState: Record<string, Record<number, boolean>>;
+
+  setManuals: (list: Manual[]) => void;
+  selectManual: (m: Manual | null) => void;
+  saveManual: (m: Manual) => void;
+  toggleCheck: (title: string, lineIndex: number) => void;
 }
 
 export const useManualStore = create<ManualState>((set, get) => ({
-  savedManuals: [],
+  manuals: [],
   selectedManual: null,
-  saveManual: (manual) => {
-    if (get().savedManuals.some((m) => m.title === manual.title)) return
-    set({ savedManuals: [...get().savedManuals, manual] })
+  savedManuals: [],
+  checklistState: {},
+
+  setManuals: (list) => set({ manuals: list }),
+  selectManual: (m) => set({ selectedManual: m }),
+  saveManual: (m) => {
+    if (get().savedManuals.some(x => x.title === m.title)) return;
+    set((s) => ({ savedManuals: [...s.savedManuals, m] }));
   },
-  selectManual: (manual) => set({ selectedManual: manual }),
-}))
+  toggleCheck: (title, lineIndex) => set((s) => ({
+    checklistState: {
+      ...s.checklistState,
+      [title]: {
+        ...(s.checklistState[title] ?? {}),
+        [lineIndex]: !s.checklistState[title]?.[lineIndex],
+      },
+    },
+  })),
+}));

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { API_BASE_URL } from '@/lib/config'
+import { authFetch } from '@/lib/authFetch'
 
 const LoginForm = () => {
   const navigate = useNavigate()
@@ -15,12 +15,9 @@ const LoginForm = () => {
     setError('')
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/user/auth/login`, {
+      const response = await authFetch('/api/v1/user/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-        },
+        skipAuth: true,
         body: JSON.stringify({ id: account, password }),
       })
 

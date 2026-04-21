@@ -35,6 +35,17 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        'status-critical': 'hsl(var(--status-critical))',
+        'status-warning':  'hsl(var(--status-warning))',
+        'status-success':  'hsl(var(--status-success))',
+        'status-info':     'hsl(var(--status-info))',
+        'status-live':     'hsl(var(--status-live))',
+        'speaker-agent':   'hsl(var(--speaker-agent))',
+        'speaker-patient': 'hsl(var(--speaker-patient))',
+      },
+      fontFamily: {
+        sans: ['Pretendard', 'Nanum Gothic', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'D2Coding', 'monospace'],
       },
       borderRadius: {
         lg: 'var(--radius)',
