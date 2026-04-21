@@ -39,6 +39,7 @@ out/
 # Add these lines to ignore specific files
 **/resources/private.key
 **/application.yml
+**/application.properties
 **/Constants.java
 **/audio/
 
