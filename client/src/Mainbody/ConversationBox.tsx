@@ -67,7 +67,7 @@ function Bubble({ sender, text, time, partial = false }: {
 const ConversationBox = () => {
   const { callId, isCallActive, callStartedAt } = useCallStore()
   const [conversations, setConversations] = useState<Conversation[]>([])
-  const [partial, setPartial]             = useState<{ text: string; sender: 'agent' | 'patient' } | null>(null)
+  const [partials, setPartials]           = useState<Map<'agent' | 'patient', string>>(new Map())
   const [loading, setLoading]             = useState(true)
   const [error, setError]                 = useState<string | null>(null)
   const [elapsed, setElapsed]             = useState(0)
@@ -108,7 +108,7 @@ const ConversationBox = () => {
   useEffect(() => {
     if (!callId) return
     setConversations([])
-    setPartial(null)
+    setPartials(new Map())
     const url = buildSseUrl(`/api/v1/call/${callId}/transcript/stream`)
     const es  = new EventSource(url)
     esRef.current = es
@@ -122,10 +122,10 @@ const ConversationBox = () => {
       }
       const sender: 'agent' | 'patient' = entry.speaker === 'agent' ? 'agent' : 'patient'
       if (!entry.isFinal) {
-        setPartial({ text: entry.text, sender })
+        setPartials(prev => new Map(prev).set(sender, entry.text))
         return
       }
-      setPartial(null)
+      setPartials(prev => { const next = new Map(prev); next.delete(sender); return next })
       const nextId = idx++
       setConversations(prev => [...prev, {
         id: nextId,
@@ -134,8 +134,8 @@ const ConversationBox = () => {
         time: new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }])
     })
-    es.addEventListener('end', () => { setPartial(null); es.close() })
-    return () => { setPartial(null); es.close() }
+    es.addEventListener('end', () => { setPartials(new Map()); es.close() })
+    return () => { setPartials(new Map()); es.close() }
   }, [callId])
 
   // Elapsed timer
@@ -151,7 +151,7 @@ const ConversationBox = () => {
   // Auto-scroll on new messages and partial updates
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [conversations, partial])
+  }, [conversations, partials])
 
   useHotkey('ctrl+alt+r', () => setConversations([]))
 
@@ -232,14 +232,16 @@ const ConversationBox = () => {
           ) : conversations.map(c => (
             <Bubble key={c.id} sender={c.sender} text={c.text} time={c.time} />
           ))}
-          {partial && (
-            <Bubble
-              key="partial"
-              sender={partial.sender}
-              text={partial.text}
-              time=""
-              partial
-            />
+          {(['patient', 'agent'] as const).map(sender =>
+            partials.has(sender) ? (
+              <Bubble
+                key={`partial-${sender}`}
+                sender={sender}
+                text={partials.get(sender)!}
+                time=""
+                partial
+              />
+            ) : null
           )}
           <div ref={bottomRef} />
         </div>

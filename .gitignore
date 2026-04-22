@@ -21,3 +21,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# IDE
+.idea/
+.claude/
+
+# client build output (Vite)
+client/dist/
+
+# server secrets
+server/src/main/resources/
