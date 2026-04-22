@@ -1,72 +1,226 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useManualStore } from '@/stores/useManualStore'
+import { useCallStore } from '@/stores/useCallStore'
+import { T } from '@/lib/theme'
 
-interface Protocol {
-  id: number
-  text: string
-  completed: boolean
+const HINTS: Record<number, string> = {
+  1: '의식 · 호흡 · 맥박',
+  2: '위치 · 안전 · 목격자',
+  3: '응급처치 안내 · 자세 조정',
+  4: '출동 팀 배정 · 도착 예정',
+}
+
+function PanelHeader({ title, subtitle, trailing }: {
+  title: string
+  subtitle: string
+  trailing?: React.ReactNode
+}) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center',
+      padding: '12px 14px',
+      borderBottom: `1px solid ${T.lineSoft}`,
+      flexShrink: 0,
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: 10, fontWeight: 600, letterSpacing: 1.6,
+          textTransform: 'uppercase' as const, color: T.textMuted, fontFamily: T.mono,
+        }}>{subtitle}</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: T.text, letterSpacing: -0.2, marginTop: 1 }}>{title}</div>
+      </div>
+      {trailing}
+    </div>
+  )
+}
+
+function ProtocolWizard({ protocols, onToggle }: {
+  protocols: { id: number; text: string; completed: boolean }[]
+  onToggle: (id: number) => void
+}) {
+  const doneCount  = protocols.filter(p => p.completed).length
+  const pct        = Math.round((doneCount / protocols.length) * 100)
+  const firstUndone = protocols.find(p => !p.completed)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      {/* Progress bar */}
+      <div style={{ padding: '8px 14px 10px', borderBottom: `1px solid ${T.lineSoft}`, flexShrink: 0 }}>
+        <div style={{
+          display: 'flex', justifyContent: 'space-between',
+          fontFamily: T.mono, fontSize: 10, letterSpacing: 0.8,
+          color: T.textMuted, marginBottom: 5,
+        }}>
+          <span>{doneCount}<span style={{ color: T.textMuted }}>/{protocols.length}</span> 완료</span>
+          <span>{pct}%</span>
+        </div>
+        <div style={{ height: 4, background: T.lineSoft, borderRadius: 2, overflow: 'hidden' }}>
+          <div style={{
+            width: `${pct}%`, height: '100%',
+            background: pct === 100 ? T.green : T.accentBlue,
+            borderRadius: 2,
+            transition: 'width .3s',
+          }} />
+        </div>
+      </div>
+
+      {/* Steps */}
+      <div className="dispatch-scroll" style={{ padding: '8px 0 4px', overflowY: 'auto', flex: 1 }}>
+        {protocols.map((p, i) => {
+          const isDone   = p.completed
+          const isActive = !isDone && firstUndone?.id === p.id
+          const isLast   = i === protocols.length - 1
+          return (
+            <div key={p.id} style={{ display: 'flex', gap: 10, position: 'relative', padding: '4px 14px' }}>
+              {!isLast && (
+                <div style={{
+                  position: 'absolute', left: 14 + 9, top: 28, bottom: -4,
+                  width: 1, background: isDone ? T.green : T.line,
+                }} />
+              )}
+              {/* step dot */}
+              <div style={{
+                width: 18, height: 18, borderRadius: 10, flexShrink: 0,
+                background: isDone ? T.green : isActive ? T.accentBlue : T.bgCard,
+                color: isDone || isActive ? '#0b0d10' : T.textMuted,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: T.mono, fontSize: 10, fontWeight: 800,
+                boxShadow: isActive
+                  ? `0 0 0 3px ${T.accentBlueSoft}`
+                  : isDone ? 'none'
+                  : `inset 0 0 0 1px ${T.line}`,
+                marginTop: 4,
+                animation: isActive ? 'dispatchPulse 2s infinite' : 'none',
+              }}>
+                {isDone ? '✓' : i + 1}
+              </div>
+
+              <button
+                onClick={() => onToggle(p.id)}
+                style={{
+                  flex: 1, textAlign: 'left', cursor: 'pointer',
+                  background: isActive ? T.accentBlueSoft : 'transparent',
+                  border: 'none', borderRadius: 4,
+                  padding: '4px 8px',
+                  display: 'flex', flexDirection: 'column', gap: 2,
+                  boxShadow: isActive ? `inset 0 0 0 1px ${T.accentBlueEdge}` : 'none',
+                }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{
+                    fontSize: 13, fontWeight: 600,
+                    color: isDone ? T.textDim : T.text,
+                    textDecoration: isDone ? 'line-through' : 'none',
+                    textDecorationColor: T.textMuted,
+                    letterSpacing: -0.2,
+                  }}>{p.text}</span>
+                  <span style={{ flex: 1 }} />
+                  <span style={{ fontFamily: T.mono, fontSize: 9, color: T.textMuted }}>Alt+{i + 1}</span>
+                </div>
+                <div style={{ fontFamily: T.mono, fontSize: 10, color: T.textMuted }}>
+                  {HINTS[p.id] ?? ''}
+                </div>
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 const Sidebar = () => {
-  const { savedManuals, selectManual } = useManualStore()
-  const [protocols, setProtocols] = useState<Protocol[]>([
-    { id: 1, text: '환자 상태 확인', completed: false },
-    { id: 2, text: '현장 조건 파악', completed: false },
-    { id: 3, text: '초동조치 지도', completed: false },
-    { id: 4, text: '출동 확인 완료', completed: false },
-  ])
-
-  const toggleProtocol = (id: number) => {
-    setProtocols((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, completed: !p.completed } : p))
-    )
-  }
+  const { savedManuals, selectManual, removeManual } = useManualStore()
+  const { protocols, toggleProtocol }               = useCallStore()
 
   useEffect(() => {
-    const handleKeydown = (e: KeyboardEvent) => {
-      if (e.altKey) {
-        const num = parseInt(e.key)
-        if (num >= 1 && num <= protocols.length) {
-          toggleProtocol(num)
-        }
-      }
+    const handler = (e: KeyboardEvent) => {
+      if (!e.altKey) return
+      const n = parseInt(e.key, 10)
+      if (n >= 1 && n <= 4) { e.preventDefault(); toggleProtocol(n) }
     }
-    window.addEventListener('keydown', handleKeydown)
-    return () => window.removeEventListener('keydown', handleKeydown)
-  }, [protocols])
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [toggleProtocol])
 
   return (
-    <div className="bg-[#f0f0f0] p-5 m-5 rounded-[10px] h-[92vh] box-border flex flex-col justify-between gap-5 shadow-[0_4px_10px_rgba(0,0,0,0.1)]">
-      {/* 열람 매뉴얼 목록 */}
-      <div className="flex-[5] bg-white p-5 rounded-[10px] mb-5 overflow-y-auto shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
-        <h3 className="font-bold mb-[30px]">열람 매뉴얼 목록</h3>
-        {savedManuals.map((manual, index) => (
-          <div
-            key={index}
-            onClick={() => selectManual(manual)}
-            className="text-[1.3em] bg-[#f0f8ff] text-[#007bff] p-[10px] rounded-[10px] mb-[10px] text-center cursor-pointer"
-          >
-            {manual.title}
-          </div>
-        ))}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%', minHeight: 0 }}>
+
+      {/* Panel A — Viewed manuals */}
+      <div style={{
+        background: T.bgElev, borderRadius: 6,
+        boxShadow: `inset 0 0 0 1px ${T.line}`,
+        display: 'flex', flexDirection: 'column',
+        flex: '0 0 auto', maxHeight: '40%',
+      }}>
+        <PanelHeader
+          title="열람 매뉴얼 목록"
+          subtitle="VIEWED MANUALS"
+          trailing={
+            <span style={{ fontFamily: T.mono, fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>
+              {savedManuals.length} · SESSION
+            </span>
+          }
+        />
+        <div className="dispatch-scroll" style={{
+          padding: 12, overflowY: 'auto',
+          display: 'flex', flexWrap: 'wrap', gap: 6, alignContent: 'flex-start',
+        }}>
+          {savedManuals.length === 0 ? (
+            <div style={{
+              width: '100%', padding: '16px 8px',
+              color: T.textMuted, fontSize: 12, textAlign: 'center',
+            }}>
+              조회된 매뉴얼이 없습니다
+            </div>
+          ) : savedManuals.map(m => (
+            <div key={m.id} style={{
+              background: T.accentBlue, color: '#fff',
+              borderRadius: 4,
+              display: 'inline-flex', alignItems: 'stretch',
+              overflow: 'hidden',
+            }}>
+              <button onClick={() => selectManual(m)}
+                style={{
+                  cursor: 'pointer', fontFamily: T.ui, border: 'none',
+                  background: 'transparent', color: 'inherit',
+                  fontSize: 12, fontWeight: 500,
+                  padding: '5px 4px 5px 10px',
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                }}>
+                <span style={{ fontFamily: T.mono, fontSize: 9, opacity: 0.7 }}>#{String(m.id).padStart(3, '0')}</span>
+                {m.title}
+              </button>
+              <button onClick={() => removeManual(m.id)}
+                title="열람 목록에서 제거"
+                style={{
+                  cursor: 'pointer', fontFamily: T.mono, border: 'none',
+                  background: 'rgba(0,0,0,0.15)', color: 'rgba(255,255,255,0.85)',
+                  fontSize: 13, fontWeight: 700, lineHeight: 1,
+                  padding: '0 8px',
+                }}>×</button>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* 수보 프로토콜 목록 */}
-      <div className="flex-[4] bg-white p-5 rounded-[10px] overflow-y-auto shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
-        <h3 className="font-bold mb-[30px]">수보 프로토콜 목록</h3>
-        {protocols.map((protocol) => (
-          <div
-            key={protocol.id}
-            onClick={() => toggleProtocol(protocol.id)}
-            className={`text-[1.3em] p-[15px] mb-5 rounded-[5px] cursor-pointer shadow-[0_2px_5px_rgba(0,0,0,0.1)] ${
-              protocol.completed
-                ? 'bg-[#d4edda] text-[#155724] border border-[#c3e6cb]'
-                : 'bg-[#f8d7da] text-[#721c24] border border-[#f5c6cb]'
-            }`}
-          >
-            {protocol.text}
-          </div>
-        ))}
+      {/* Panel B — Protocol wizard */}
+      <div style={{
+        background: T.bgElev, borderRadius: 6,
+        boxShadow: `inset 0 0 0 1px ${T.line}`,
+        display: 'flex', flexDirection: 'column',
+        flex: 1, minHeight: 0,
+      }}>
+        <PanelHeader
+          title="수보 프로토콜 진행"
+          subtitle="PROTOCOL · STEPPER"
+          trailing={
+            <span style={{ fontFamily: T.mono, fontSize: 11, color: T.textDim, letterSpacing: 0.5 }}>
+              {protocols.filter(p => p.completed).length}
+              <span style={{ color: T.textMuted }}>/{protocols.length}</span>
+            </span>
+          }
+        />
+        <ProtocolWizard protocols={protocols} onToggle={toggleProtocol} />
       </div>
     </div>
   )
