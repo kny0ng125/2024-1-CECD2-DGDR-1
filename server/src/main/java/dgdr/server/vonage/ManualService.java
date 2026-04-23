@@ -80,7 +80,7 @@ public class ManualService {
     private String formatConversations(List<CallRecordDto> callRecordDtos) {
         return callRecordDtos.stream()
                 .map(callRecord -> {
-                    if (callRecord.getSpeakerPhoneNumber().equals(agentPhone)) {
+                    if ("agent".equals(callRecord.getSpeaker())) {
                         return "상황실: " + callRecord.getTranscription();
                     } else {
                         return "신고자: " + callRecord.getTranscription();

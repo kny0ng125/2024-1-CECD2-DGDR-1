@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useHotkey } from '@/hooks/useHotkey'
-import { T } from '@/lib/theme'
 
 function useClock() {
   const [t, setT] = useState(new Date())
@@ -46,85 +45,66 @@ const NavbarForm = () => {
   if (isAuthPage) return null
 
   return (
-    <div style={{
-      height: 52, flexShrink: 0,
-      background: T.bgElev,
-      borderBottom: `1px solid ${T.line}`,
-      display: 'flex', alignItems: 'center',
-      padding: '0 20px', gap: 24,
-      fontFamily: T.ui, color: T.text,
-      position: 'relative', zIndex: 10,
-    }}>
+    <div className="h-[52px] shrink-0 bg-dispatch-elev border-b border-dispatch-line flex items-center px-5 gap-6 font-ui text-dispatch-text relative z-10">
       {/* App badge + title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{
-          width: 26, height: 26, borderRadius: 4,
-          background: T.red,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: T.mono, fontSize: 11, fontWeight: 700, color: '#fff',
-          letterSpacing: -0.5,
-        }}>119</div>
-        <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: -0.2 }}>
+      <div className="flex items-center gap-2.5">
+        <div className="w-[26px] h-[26px] rounded bg-dispatch-red flex items-center justify-center font-mono text-[11px] font-bold text-white tracking-[-0.5px]">
+          119
+        </div>
+        <div className="text-sm font-semibold tracking-[-0.2px]">
           119 수보 시스템
-          <span style={{ color: T.textMuted, fontWeight: 400, marginLeft: 8, fontSize: 11, fontFamily: T.mono }}>
+          <span className="text-dispatch-textMuted font-normal ml-2 text-[11px] font-mono">
             DISPATCH · v2.4
           </span>
         </div>
       </div>
 
-      <div style={{ width: 1, height: 22, background: T.line }} />
+      <div className="w-px h-[22px] bg-dispatch-line" />
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 2 }}>
+      <div className="flex gap-0.5">
         {tabs.map(tab => {
           const active = tab.key === current
           return (
-            <button key={tab.key}
+            <button
+              key={tab.key}
               onClick={() => navigate(tab.path)}
-              style={{
-                border: 'none', cursor: 'pointer', fontFamily: T.ui,
-                padding: '6px 12px', borderRadius: 4,
-                background: active ? T.accentBlueSoft : 'transparent',
-                color: active ? '#93c5fd' : T.textDim,
-                fontSize: 13, fontWeight: 500,
-                boxShadow: active ? `inset 0 0 0 1px ${T.accentBlueEdge}` : 'none',
-                transition: 'background .12s, color .12s',
-              }}>
+              className={`border-0 cursor-pointer font-ui py-1.5 px-3 rounded text-[13px] font-medium transition-colors duration-[120ms] ${
+                active
+                  ? 'bg-dispatch-blue-soft text-[#93c5fd] ring-1 ring-inset ring-dispatch-blue-edge'
+                  : 'bg-transparent text-dispatch-textDim'
+              }`}
+            >
               {tab.label}
             </button>
           )
         })}
       </div>
 
-      <div style={{ flex: 1 }} />
+      <div className="flex-1" />
 
       {/* Right side */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{
-            display: 'inline-block',
-            width: 6, height: 6, borderRadius: 3,
-            background: T.green, boxShadow: `0 0 8px ${T.green}`,
-          }} />
-          <span style={{ fontFamily: T.mono, color: T.textDim }}>SHIFT · DAY</span>
+      <div className="flex items-center gap-[18px] text-xs">
+        <div className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-1.5 h-1.5 rounded-full bg-dispatch-green"
+            style={{ boxShadow: '0 0 8px #22c55e' }}
+          />
+          <span className="font-mono text-dispatch-textDim">SHIFT · DAY</span>
         </div>
 
         {userId && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{
-              width: 22, height: 22, borderRadius: 11,
-              background: T.accentBlueSoft, color: '#93c5fd',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 600,
-              boxShadow: `inset 0 0 0 1px ${T.accentBlueEdge}`,
-            }}>{agentInitial}</div>
-            <span style={{ color: T.text, fontSize: 13 }}>
-              {agentName} <span style={{ color: T.textMuted }}>요원</span>
+          <div className="flex items-center gap-2">
+            <div className="w-[22px] h-[22px] rounded-full bg-dispatch-blue-soft text-[#93c5fd] flex items-center justify-center text-[11px] font-semibold ring-1 ring-inset ring-dispatch-blue-edge">
+              {agentInitial}
+            </div>
+            <span className="text-dispatch-text text-[13px]">
+              {agentName} <span className="text-dispatch-textMuted">요원</span>
             </span>
           </div>
         )}
 
-        <div style={{ fontFamily: T.mono, color: T.text, fontSize: 13, letterSpacing: 0.5 }}>
+        <div className="font-mono text-dispatch-text text-[13px] tracking-[0.5px]">
           {fmtClock(now)}
         </div>
       </div>

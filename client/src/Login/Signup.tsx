@@ -1,25 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authFetch } from '@/lib/authFetch'
-import { T } from '@/lib/theme'
 
-const inputStyle: React.CSSProperties = {
-  flex: 1, fontFamily: 'inherit', fontSize: 14,
-  padding: '10px 13px',
-  background: T.bgCard, color: T.text,
-  border: 'none', borderRadius: 5,
-  boxShadow: `inset 0 0 0 1px ${T.line}`,
-  outline: 'none',
-  transition: 'box-shadow .15s',
-}
+const INPUT_CLASS =
+  'flex-1 text-sm py-2.5 px-[13px] bg-dispatch-card text-dispatch-text border-0 rounded-[5px] ring-1 ring-inset ring-dispatch-line outline-none transition-shadow duration-150 focus:ring-[1.5px] focus:ring-dispatch-blue'
 
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontFamily: T.mono, fontSize: 9.5,
-  color: T.textMuted, letterSpacing: 1.4,
-  marginBottom: 6,
-  textTransform: 'uppercase',
-}
+const INPUT_FULL_CLASS = `w-full box-border ${INPUT_CLASS.replace('flex-1', '')}`
+
+const LABEL_CLASS =
+  'block font-mono text-[9.5px] text-dispatch-textMuted tracking-[1.4px] mb-1.5 uppercase'
+
+const PILL_BUTTON_CLASS =
+  'py-2.5 px-4 border-0 rounded-[5px] bg-dispatch-blue-soft text-[#93c5fd] font-mono text-[11px] font-bold tracking-[0.5px] cursor-pointer ring-1 ring-inset ring-dispatch-blue-edge whitespace-nowrap'
 
 const SignUpForm = () => {
   const navigate = useNavigate()
@@ -68,64 +60,38 @@ const SignUpForm = () => {
     finally { setIsSubmitting(false) }
   }
 
-  const onFocus  = (e: React.FocusEvent<HTMLInputElement>) =>
-    e.currentTarget.style.boxShadow = `inset 0 0 0 1.5px ${T.accentBlue}`
-  const onBlur   = (e: React.FocusEvent<HTMLInputElement>) =>
-    e.currentTarget.style.boxShadow = `inset 0 0 0 1px ${T.line}`
-
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      minHeight: '100vh', background: T.bg, padding: '32px 16px',
-      fontFamily: T.ui, color: T.text, boxSizing: 'border-box',
-    }}>
-      <div style={{
-        width: 520,
-        background: T.bgElev,
-        borderRadius: 8,
-        boxShadow: `0 20px 60px rgba(0,0,0,0.5), inset 0 0 0 1px ${T.line}`,
-        padding: '36px 32px',
-      }}>
+    <div className="flex items-center justify-center min-h-screen bg-dispatch-bg py-8 px-4 font-ui text-dispatch-text box-border">
+      <div
+        className="w-[520px] bg-dispatch-elev rounded-lg py-9 px-8 ring-1 ring-inset ring-dispatch-line"
+        style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}
+      >
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 40, height: 40, borderRadius: 8,
-            background: T.red, marginBottom: 14,
-            fontFamily: T.mono, fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: -0.5,
-          }}>119</div>
-          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: -0.3, color: T.text }}>요원 등록</div>
-          <div style={{ fontFamily: T.mono, fontSize: 10, color: T.textMuted, letterSpacing: 1.4, marginTop: 4 }}>
+        <div className="text-center mb-7">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-dispatch-red mb-3.5 font-mono text-sm font-bold text-white tracking-[-0.5px]">
+            119
+          </div>
+          <div className="text-[18px] font-semibold tracking-[-0.3px] text-dispatch-text">요원 등록</div>
+          <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px] mt-1">
             DISPATCH · OPERATOR REGISTRATION
           </div>
         </div>
 
-        <div style={{ height: 1, background: T.line, marginBottom: 24 }} />
+        <div className="h-px bg-dispatch-line mb-6" />
 
-        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form onSubmit={handleSignup} className="flex flex-col gap-4">
 
           {/* 아이디 */}
           <div>
-            <label style={labelStyle}>아이디 · ID</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <label className={LABEL_CLASS}>아이디 · ID</label>
+            <div className="flex gap-2">
               <input type="text" placeholder="아이디 입력" value={account}
                 onChange={e => setAccount(e.target.value)}
-                style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-              <button type="button" onClick={checkAccount}
-                style={{
-                  padding: '10px 16px', border: 'none', borderRadius: 5,
-                  background: T.accentBlueSoft, color: '#93c5fd',
-                  fontFamily: T.mono, fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
-                  cursor: 'pointer',
-                  boxShadow: `inset 0 0 0 1px ${T.accentBlueEdge}`,
-                  whiteSpace: 'nowrap',
-                }}>중복 확인</button>
+                className={INPUT_CLASS} />
+              <button type="button" onClick={checkAccount} className={PILL_BUTTON_CLASS}>중복 확인</button>
             </div>
             {accountValid !== null && (
-              <div style={{
-                marginTop: 6, fontFamily: T.mono, fontSize: 10.5, letterSpacing: 0.3,
-                color: accountValid ? '#4ade80' : '#fca5a5',
-              }}>
+              <div className={`mt-1.5 font-mono text-[10.5px] tracking-[0.3px] ${accountValid ? 'text-[#4ade80]' : 'text-[#fca5a5]'}`}>
                 {accountValid ? '✔ 사용 가능한 아이디입니다.' : '✖ 이미 사용 중인 아이디입니다.'}
               </div>
             )}
@@ -133,26 +99,15 @@ const SignUpForm = () => {
 
           {/* 전화번호 */}
           <div>
-            <label style={labelStyle}>전화번호 · PHONE</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <label className={LABEL_CLASS}>전화번호 · PHONE</label>
+            <div className="flex gap-2">
               <input type="text" placeholder="010-0000-0000" value={phoneNumber}
                 onChange={e => setPhoneNumber(e.target.value)}
-                style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-              <button type="button" onClick={() => setPhoneValid(true)}
-                style={{
-                  padding: '10px 16px', border: 'none', borderRadius: 5,
-                  background: T.accentBlueSoft, color: '#93c5fd',
-                  fontFamily: T.mono, fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
-                  cursor: 'pointer',
-                  boxShadow: `inset 0 0 0 1px ${T.accentBlueEdge}`,
-                  whiteSpace: 'nowrap',
-                }}>인증하기</button>
+                className={INPUT_CLASS} />
+              <button type="button" onClick={() => setPhoneValid(true)} className={PILL_BUTTON_CLASS}>인증하기</button>
             </div>
             {phoneValid !== null && (
-              <div style={{
-                marginTop: 6, fontFamily: T.mono, fontSize: 10.5, letterSpacing: 0.3,
-                color: phoneValid ? '#4ade80' : '#fca5a5',
-              }}>
+              <div className={`mt-1.5 font-mono text-[10.5px] tracking-[0.3px] ${phoneValid ? 'text-[#4ade80]' : 'text-[#fca5a5]'}`}>
                 {phoneValid ? '✔ 사용 가능한 번호입니다.' : '✖ 이미 사용 중인 번호입니다.'}
               </div>
             )}
@@ -160,25 +115,20 @@ const SignUpForm = () => {
 
           {/* 이름 */}
           <div>
-            <label style={labelStyle}>이름 · NAME</label>
+            <label className={LABEL_CLASS}>이름 · NAME</label>
             <input type="text" placeholder="성함 입력" value={name}
               onChange={e => setName(e.target.value)}
-              style={{ ...inputStyle, width: '100%', flex: 'none', boxSizing: 'border-box' }}
-              onFocus={onFocus} onBlur={onBlur} />
+              className={INPUT_FULL_CLASS} />
           </div>
 
           {/* 비밀번호 */}
           <div>
-            <label style={labelStyle}>비밀번호 · PASSWORD</label>
+            <label className={LABEL_CLASS}>비밀번호 · PASSWORD</label>
             <input type="password" placeholder="••••••••" value={password}
               onChange={e => { setPassword(e.target.value); setPasswordValid(validatePassword(e.target.value)) }}
-              style={{ ...inputStyle, width: '100%', flex: 'none', boxSizing: 'border-box' }}
-              onFocus={onFocus} onBlur={onBlur} />
+              className={INPUT_FULL_CLASS} />
             {password && (
-              <div style={{
-                marginTop: 6, fontFamily: T.mono, fontSize: 10.5, letterSpacing: 0.2,
-                color: passwordValid ? '#4ade80' : '#fca5a5',
-              }}>
+              <div className={`mt-1.5 font-mono text-[10.5px] tracking-[0.2px] ${passwordValid ? 'text-[#4ade80]' : 'text-[#fca5a5]'}`}>
                 {passwordValid
                   ? '✔ 비밀번호가 유효합니다.'
                   : '✖ 8~12자, 영대소문자·숫자·특수문자(@$!%*?&) 모두 포함'}
@@ -188,73 +138,52 @@ const SignUpForm = () => {
 
           {/* 비밀번호 확인 */}
           <div>
-            <label style={labelStyle}>비밀번호 확인 · CONFIRM</label>
+            <label className={LABEL_CLASS}>비밀번호 확인 · CONFIRM</label>
             <input type="password" placeholder="••••••••" value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              style={{ ...inputStyle, width: '100%', flex: 'none', boxSizing: 'border-box' }}
-              onFocus={onFocus} onBlur={onBlur} />
+              className={INPUT_FULL_CLASS} />
             {confirmPassword && password !== confirmPassword && (
-              <div style={{ marginTop: 6, fontFamily: T.mono, fontSize: 10.5, color: '#fca5a5' }}>
+              <div className="mt-1.5 font-mono text-[10.5px] text-[#fca5a5]">
                 ✖ 비밀번호가 일치하지 않습니다.
               </div>
             )}
           </div>
 
           {/* Submit */}
-          <button type="submit" disabled={isSubmitting}
-            style={{
-              width: '100%', padding: '11px 0', marginTop: 4,
-              background: isSubmitting ? T.accentBlueSoft : T.accentBlue,
-              color: isSubmitting ? '#93c5fd' : '#fff',
-              border: 'none', borderRadius: 5,
-              fontSize: 14, fontWeight: 600,
-              cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              fontFamily: T.ui, letterSpacing: -0.2,
-              transition: 'background .15s',
-            }}>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`w-full py-[11px] mt-1 border-0 rounded-[5px] text-sm font-semibold font-ui tracking-[-0.2px] transition-colors duration-150 ${
+              isSubmitting
+                ? 'bg-dispatch-blue-soft text-[#93c5fd] cursor-not-allowed'
+                : 'bg-dispatch-blue text-white cursor-pointer'
+            }`}
+          >
             {isSubmitting ? '등록 중…' : '요원 등록'}
           </button>
 
-          <button type="button" onClick={() => navigate('/login')}
-            style={{
-              width: '100%', padding: '9px 0',
-              background: 'transparent', color: T.textDim,
-              border: 'none', borderRadius: 5, fontSize: 13,
-              cursor: 'pointer', fontFamily: T.ui,
-              boxShadow: `inset 0 0 0 1px ${T.line}`,
-            }}>
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="w-full py-[9px] bg-transparent text-dispatch-textDim border-0 rounded-[5px] text-[13px] cursor-pointer font-ui ring-1 ring-inset ring-dispatch-line"
+          >
             로그인으로 돌아가기
           </button>
         </form>
 
         {/* Result messages */}
         {signupSuccess && (
-          <div style={{
-            marginTop: 16, padding: '12px 14px',
-            background: T.greenSoft, boxShadow: `inset 0 0 0 1px ${T.greenEdge}`,
-            borderRadius: 5, color: '#4ade80',
-            fontFamily: T.mono, fontSize: 11, textAlign: 'center', letterSpacing: 0.3,
-          }}>
+          <div className="mt-4 py-3 px-3.5 bg-dispatch-green-soft ring-1 ring-inset ring-dispatch-green-edge rounded-[5px] text-[#4ade80] font-mono text-[11px] text-center tracking-[0.3px]">
             ✔ 회원가입 성공! 로그인 페이지로 이동합니다…
           </div>
         )}
         {errorMessage && (
-          <div style={{
-            marginTop: 16, padding: '12px 14px',
-            background: T.redSoft, boxShadow: `inset 0 0 0 1px ${T.redEdge}`,
-            borderRadius: 5, color: '#fca5a5',
-            fontFamily: T.mono, fontSize: 11, textAlign: 'center', letterSpacing: 0.3,
-          }}>
+          <div className="mt-4 py-3 px-3.5 bg-dispatch-red-soft ring-1 ring-inset ring-dispatch-red-edge rounded-[5px] text-[#fca5a5] font-mono text-[11px] text-center tracking-[0.3px]">
             ✖ {errorMessage}
           </div>
         )}
 
-        <div style={{
-          marginTop: 24, paddingTop: 18,
-          borderTop: `1px solid ${T.line}`,
-          textAlign: 'center',
-          fontFamily: T.mono, fontSize: 9.5, color: T.textMuted, letterSpacing: 1,
-        }}>
+        <div className="mt-6 pt-[18px] border-t border-dispatch-line text-center font-mono text-[9.5px] text-dispatch-textMuted tracking-[1px]">
           AUTHORIZED PERSONNEL ONLY · 권한 있는 요원 전용
         </div>
       </div>

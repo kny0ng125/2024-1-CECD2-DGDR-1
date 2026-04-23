@@ -1,7 +1,7 @@
 export interface User {
   id: string;
   name: string;
-  phoneNumber: string;
+  phone: string;
 }
 
 export interface Call {
@@ -12,7 +12,7 @@ export interface Call {
 
 export interface CallRecordDto {
   id: number;
-  call: Call;
+  speaker: 'agent' | 'caller';
   speakerPhoneNumber: string;
   transcription: string;
   time: string;

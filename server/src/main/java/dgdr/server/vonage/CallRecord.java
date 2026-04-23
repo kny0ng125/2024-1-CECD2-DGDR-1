@@ -24,6 +24,9 @@ public class CallRecord {
     @JoinColumn(name = "call_id")
     private Call call;
 
+    @Column(name = "speaker")
+    private String speaker;
+
     @Column(name = "speaker_phone_number")
     private String speakerPhoneNumber;
 
@@ -35,8 +38,9 @@ public class CallRecord {
     private LocalDateTime time;
 
     @Builder
-    public CallRecord(Call call, String speakerPhoneNumber, String transcription) {
+    public CallRecord(Call call, String speaker, String speakerPhoneNumber, String transcription) {
         this.call = call;
+        this.speaker = speaker;
         this.speakerPhoneNumber = speakerPhoneNumber;
         this.transcription = transcription;
     }

@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useCallStore } from '@/stores/useCallStore'
 import { useHotkey } from '@/hooks/useHotkey'
-import { authFetch, buildSseUrl } from '@/lib/authFetch'
-import { T } from '@/lib/theme'
+import { buildSseUrl } from '@/lib/authFetch'
 
 interface Conversation {
   id: number
@@ -20,46 +19,34 @@ function Bubble({ sender, text, time, partial = false }: {
 }) {
   const isAgent = sender === 'agent'
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column',
-      alignItems: isAgent ? 'flex-end' : 'flex-start',
-      marginBottom: 14,
-      opacity: partial ? 0.75 : 1,
-    }}>
-      <div style={{
-        fontSize: 10, fontWeight: 600, letterSpacing: 1,
-        color: isAgent ? '#7aa8f5' : T.textMuted,
-        textTransform: 'uppercase' as const, fontFamily: T.mono,
-        marginBottom: 4, padding: '0 2px',
-      }}>{isAgent ? '요원' : '신고자'}</div>
+    <div
+      className={`flex flex-col mb-3.5 ${isAgent ? 'items-end' : 'items-start'} ${partial ? 'opacity-75' : ''}`}
+    >
+      <div
+        className={`text-[10px] font-semibold tracking-[1px] uppercase font-mono mb-1 px-0.5 ${
+          isAgent ? 'text-[#7aa8f5]' : 'text-dispatch-textMuted'
+        }`}
+      >
+        {isAgent ? '요원' : '신고자'}
+      </div>
 
-      <div style={{
-        maxWidth: '82%',
-        padding: '9px 12px',
-        borderRadius: 8,
-        background: isAgent ? T.accentBlueSoft : T.slateSoft,
-        color: isAgent ? '#dbeafe' : '#cbd5e1',
-        boxShadow: isAgent
-          ? `inset 0 0 0 1px ${T.accentBlueEdge}`
-          : `inset 0 0 0 1px rgba(148,163,184,0.25)`,
-        fontSize: 13, lineHeight: 1.55,
-        borderTopRightRadius: isAgent ? 2 : 8,
-        borderTopLeftRadius:  isAgent ? 8 : 2,
-      }}>
+      <div
+        className={`max-w-[82%] py-[9px] px-3 rounded-lg text-[13px] leading-[1.55] ring-1 ring-inset ${
+          isAgent
+            ? 'bg-dispatch-blue-soft text-[#dbeafe] ring-dispatch-blue-edge rounded-tr-sm'
+            : 'bg-dispatch-slateSoft text-[#cbd5e1] ring-[rgba(148,163,184,0.25)] rounded-tl-sm'
+        }`}
+      >
         {text}
         {partial && (
-          <span style={{
-            display: 'inline-block', width: 2, height: 13,
-            background: T.text, marginLeft: 3, verticalAlign: -2,
-            animation: 'dispatchBlink 1s steps(2) infinite',
-          }} />
+          <span
+            className="inline-block w-0.5 h-[13px] bg-dispatch-text ml-[3px] align-[-2px]"
+            style={{ animation: 'dispatchBlink 1s steps(2) infinite' }}
+          />
         )}
       </div>
 
-      <div style={{
-        fontSize: 10, color: T.textMuted, fontFamily: T.mono,
-        marginTop: 4, padding: '0 2px',
-      }}>{time}</div>
+      <div className="text-[10px] text-dispatch-textMuted font-mono mt-1 px-0.5">{time}</div>
     </div>
   )
 }
@@ -68,41 +55,9 @@ const ConversationBox = () => {
   const { callId, isCallActive, callStartedAt } = useCallStore()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [partials, setPartials]           = useState<Map<'agent' | 'patient', string>>(new Map())
-  const [loading, setLoading]             = useState(true)
-  const [error, setError]                 = useState<string | null>(null)
   const [elapsed, setElapsed]             = useState(0)
   const esRef    = useRef<EventSource | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
-
-  // Boot: load latest call records once
-  useEffect(() => {
-    const boot = async () => {
-      try {
-        const res = await authFetch('/api/v1/call/latest')
-        if (!res.ok) throw new Error(`API error: ${res.statusText}`)
-        const data = await res.json()
-        setConversations(
-          data.map((item: any, index: number) => ({
-            id: item.id ?? index + 1,
-            text: item.transcription,
-            sender: item.speakerPhoneNumber === item.call?.user?.phoneNumber ? 'agent' : 'patient',
-            time: new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          }))
-        )
-        if (data.length > 0 && data[0].call?.id) {
-          useCallStore.getState().startCall(
-            data[0].call.id,
-            data[0].call.startTime ?? new Date().toISOString()
-          )
-        }
-      } catch (err) {
-        setError((err as Error).message)
-      } finally {
-        setLoading(false)
-      }
-    }
-    boot()
-  }, [])
 
   // SSE: subscribe when callId is set
   useEffect(() => {
@@ -157,76 +112,48 @@ const ConversationBox = () => {
 
   const mm = String(Math.floor(elapsed / 60)).padStart(2, '0')
   const ss = String(elapsed % 60).padStart(2, '0')
-
-  if (loading) {
-    return (
-      <div style={{
-        background: T.bgElev, borderRadius: 6,
-        boxShadow: `inset 0 0 0 1px ${T.line}`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100%',
-      }}>
-        <div style={{
-          width: 24, height: 24, borderRadius: '50%',
-          border: `2px solid ${T.line}`, borderTopColor: T.accentBlue,
-          animation: 'dispatchSpin 0.9s linear infinite',
-        }} />
-      </div>
-    )
-  }
+  const active = !!callId
+  const hasContent = conversations.length > 0 || partials.size > 0
 
   return (
-    <div style={{
-      background: T.bgElev, borderRadius: 6,
-      boxShadow: `inset 0 0 0 1px ${T.line}`,
-      display: 'flex', flexDirection: 'column',
-      height: '100%', minHeight: 0,
-    }}>
+    <div className="bg-dispatch-elev rounded-md ring-1 ring-inset ring-dispatch-line flex flex-col h-full min-h-0">
       {/* Panel header */}
-      <div style={{
-        display: 'flex', alignItems: 'center',
-        padding: '12px 14px',
-        borderBottom: `1px solid ${T.lineSoft}`,
-        flexShrink: 0,
-      }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: 10, fontWeight: 600, letterSpacing: 1.6,
-            textTransform: 'uppercase' as const, color: T.textMuted, fontFamily: T.mono,
-          }}>LIVE TRANSCRIPT</div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: T.text, letterSpacing: -0.2, marginTop: 1 }}>
-            응급 신고 통화 내용
+      <div className="flex items-center px-3.5 py-3 border-b border-dispatch-lineSoft shrink-0">
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] font-semibold tracking-[1.6px] uppercase text-dispatch-textMuted font-mono">
+            {active ? 'LIVE TRANSCRIPT' : 'IDLE'}
+          </div>
+          <div className="text-sm font-semibold text-dispatch-text tracking-[-0.2px] mt-px">
+            {active ? '응급 신고 통화 내용' : '수신된 통화가 없습니다'}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={() => setConversations([])}
-            style={{
-              fontFamily: T.ui, cursor: 'pointer', border: 'none',
-              background: 'transparent', color: T.textDim,
-              fontSize: 11, padding: '4px 8px', borderRadius: 3,
-              boxShadow: `inset 0 0 0 1px ${T.line}`,
-            }}>새로고침</button>
-        </div>
+        {active && (
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setConversations([])}
+              className="font-ui cursor-pointer border-0 bg-transparent text-dispatch-textDim text-[11px] py-1 px-2 rounded-[3px] ring-1 ring-inset ring-dispatch-line"
+            >
+              새로고침
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Messages */}
-      {error ? (
-        <div style={{
-          margin: 14, padding: 14,
-          background: T.redSoft, boxShadow: `inset 0 0 0 1px ${T.redEdge}`,
-          borderRadius: 6, color: '#fca5a5', fontSize: 12,
-        }}>
-          서버가 응답하지 않습니다.
+      {/* Body */}
+      {!active ? (
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-3.5 text-dispatch-textMuted p-8">
+          <div className="w-[54px] h-[54px] rounded-[27px] bg-dispatch-card ring-1 ring-inset ring-dispatch-line flex items-center justify-center font-mono text-xl text-dispatch-textMuted">
+            ◌
+          </div>
+          <div className="text-[13px] text-dispatch-textDim">현재 진행 중인 통화가 없습니다.</div>
+          <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1px]">
+            STANDBY · 통화 수신 대기 중
+          </div>
         </div>
       ) : (
-        <div className="dispatch-scroll"
-          style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 14px 8px' }}>
-          {conversations.length === 0 ? (
-            <div style={{
-              margin: '12px 0', padding: '14px',
-              background: T.accentBlueSoft, boxShadow: `inset 0 0 0 1px ${T.accentBlueEdge}`,
-              borderRadius: 6, color: '#93c5fd', fontSize: 12, textAlign: 'center',
-            }}>
+        <div className="dispatch-scroll flex-1 min-h-0 overflow-y-auto pt-3.5 px-3.5 pb-2">
+          {!hasContent ? (
+            <div className="my-3 p-3.5 bg-dispatch-blue-soft ring-1 ring-inset ring-dispatch-blue-edge rounded-md text-[#93c5fd] text-xs text-center">
               대화 내용을 가져오는 중입니다…
             </div>
           ) : conversations.map(c => (
@@ -248,15 +175,18 @@ const ConversationBox = () => {
       )}
 
       {/* Footer */}
-      <div style={{
-        padding: '10px 14px',
-        borderTop: `1px solid ${T.lineSoft}`,
-        display: 'flex', justifyContent: 'space-between',
-        fontFamily: T.mono, fontSize: 10, color: T.textMuted, letterSpacing: 1,
-        flexShrink: 0,
-      }}>
-        <span>CALL · {conversations.length} 발화</span>
-        <span>DURATION · {mm}:{ss}</span>
+      <div className="px-3.5 py-2.5 border-t border-dispatch-lineSoft flex justify-between font-mono text-[10px] text-dispatch-textMuted tracking-[1px] shrink-0">
+        {active ? (
+          <>
+            <span>CALL · {conversations.length} 발화</span>
+            <span>DURATION · {mm}:{ss}</span>
+          </>
+        ) : (
+          <>
+            <span>STANDBY</span>
+            <span>00:00</span>
+          </>
+        )}
       </div>
     </div>
   )

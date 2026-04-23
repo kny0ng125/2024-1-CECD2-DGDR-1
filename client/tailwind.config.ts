@@ -42,10 +42,42 @@ const config: Config = {
         'status-live':     'hsl(var(--status-live))',
         'speaker-agent':   'hsl(var(--speaker-agent))',
         'speaker-patient': 'hsl(var(--speaker-patient))',
+        dispatch: {
+          bg:         '#0b0d10',
+          elev:       '#12151a',
+          card:       '#161a21',
+          cardHi:     '#1c2029',
+          line:       '#242935',
+          lineSoft:   '#1b1f27',
+          text:       '#e7ecf2',
+          textDim:    '#9aa3b2',
+          textMuted:  '#5a6372',
+          slateSoft:  'rgba(148,163,184,0.12)',
+        },
+        'dispatch-blue': {
+          DEFAULT: '#3b82f6',
+          soft:    'rgba(59,130,246,0.14)',
+          edge:    'rgba(59,130,246,0.45)',
+        },
+        'dispatch-red': {
+          DEFAULT: '#ef4444',
+          soft:    'rgba(239,68,68,0.14)',
+          edge:    'rgba(239,68,68,0.45)',
+        },
+        'dispatch-amber': {
+          DEFAULT: '#f59e0b',
+          soft:    'rgba(245,158,11,0.14)',
+        },
+        'dispatch-green': {
+          DEFAULT: '#22c55e',
+          soft:    'rgba(34,197,94,0.14)',
+          edge:    'rgba(34,197,94,0.4)',
+        },
       },
       fontFamily: {
         sans: ['Pretendard', 'Nanum Gothic', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'D2Coding', 'monospace'],
+        mono: ['"JetBrains Mono"', '"SFMono-Regular"', 'ui-monospace', 'monospace'],
+        ui:   ['"Inter"', 'system-ui', '-apple-system', '"Segoe UI"', 'sans-serif'],
       },
       borderRadius: {
         lg: 'var(--radius)',

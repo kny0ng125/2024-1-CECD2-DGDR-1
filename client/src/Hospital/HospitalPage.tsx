@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import { authFetch } from '@/lib/authFetch'
-import { T } from '@/lib/theme'
 
 interface Hospital {
   pid: string; name: string; location: string; call: string; time: string
@@ -37,10 +36,10 @@ function PanelHeader({ title, subtitle, trailing }: {
   title: string; subtitle: string; trailing?: React.ReactNode
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderBottom: `1px solid ${T.lineSoft}`, flexShrink: 0 }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 1.6, textTransform: 'uppercase' as const, color: T.textMuted, fontFamily: T.mono }}>{subtitle}</div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: T.text, letterSpacing: -0.2, marginTop: 1 }}>{title}</div>
+    <div className="flex items-center px-3.5 py-3 border-b border-dispatch-lineSoft shrink-0">
+      <div className="flex-1 min-w-0">
+        <div className="text-[10px] font-semibold tracking-[1.6px] uppercase text-dispatch-textMuted font-mono">{subtitle}</div>
+        <div className="text-sm font-semibold text-dispatch-text tracking-[-0.2px] mt-px">{title}</div>
       </div>
       {trailing}
     </div>
@@ -51,52 +50,62 @@ function BedRow({ label, subLabel, available, total }: {
   label: string; subLabel: string; available: number; total: number | null
 }) {
   const state = available === 0 ? 'red' : available <= 3 ? 'amber' : 'green'
-  const cfg = {
-    red:   { bg: T.redSoft,   edge: T.redEdge,                      tag: '없음',     tagBg: T.red,   num: '#fca5a5' },
-    amber: { bg: T.amberSoft, edge: 'rgba(245,158,11,0.42)',         tag: '여유 적음', tagBg: T.amber, num: '#fcd34d' },
-    green: { bg: T.greenSoft, edge: T.greenEdge,                     tag: '여유',     tagBg: T.green, num: '#86efac' },
+  const styles = {
+    red: {
+      wrap:   'bg-dispatch-red-soft ring-1 ring-inset ring-dispatch-red-edge',
+      number: 'text-[#fca5a5]',
+      tag:    'bg-dispatch-red',
+      label:  '없음',
+    },
+    amber: {
+      wrap:   'bg-dispatch-amber-soft ring-1 ring-inset ring-[rgba(245,158,11,0.42)]',
+      number: 'text-[#fcd34d]',
+      tag:    'bg-dispatch-amber',
+      label:  '여유 적음',
+    },
+    green: {
+      wrap:   'bg-dispatch-green-soft ring-1 ring-inset ring-dispatch-green-edge',
+      number: 'text-[#86efac]',
+      tag:    'bg-dispatch-green',
+      label:  '여유',
+    },
   }[state]
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', padding: '12px 14px',
-      background: cfg.bg, boxShadow: `inset 0 0 0 1px ${cfg.edge}`,
-      borderRadius: 5, gap: 12,
-    }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: T.text, letterSpacing: -0.2 }}>{label}</div>
-        <div style={{ fontFamily: T.mono, fontSize: 10, color: T.textMuted, letterSpacing: 0.8, marginTop: 2 }}>{subLabel}</div>
+    <div className={`flex items-center py-3 px-3.5 rounded-[5px] gap-3 ${styles.wrap}`}>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-semibold text-dispatch-text tracking-[-0.2px]">{label}</div>
+        <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[0.8px] mt-0.5">{subLabel}</div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, fontFamily: T.mono, fontVariantNumeric: 'tabular-nums' }}>
-        <span style={{ fontSize: 22, fontWeight: 700, color: cfg.num, letterSpacing: -0.5 }}>{available}</span>
-        {total != null && <span style={{ fontSize: 12, color: T.textMuted }}>/ {total}</span>}
+      <div className="flex items-baseline gap-1 font-mono tabular-nums">
+        <span className={`text-[22px] font-bold tracking-[-0.5px] ${styles.number}`}>{available}</span>
+        {total != null && <span className="text-xs text-dispatch-textMuted">/ {total}</span>}
       </div>
-      <div style={{
-        fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: 1,
-        background: cfg.tagBg, color: '#0b0d10',
-        padding: '3px 7px', borderRadius: 3, minWidth: 62, textAlign: 'center',
-      }}>{cfg.tag}</div>
+      <div className={`font-mono text-[9px] font-bold tracking-[1px] text-[#0b0d10] py-[3px] px-[7px] rounded-[3px] min-w-[62px] text-center ${styles.tag}`}>
+        {styles.label}
+      </div>
     </div>
   )
 }
 
 function EquipChip({ name, available }: { name: string; available: boolean }) {
   return (
-    <div style={{
-      padding: '11px 14px',
-      background: available ? T.greenSoft : 'rgba(148,163,184,0.08)',
-      boxShadow: `inset 0 0 0 1px ${available ? T.greenEdge : 'rgba(148,163,184,0.2)'}`,
-      borderRadius: 5, display: 'flex', alignItems: 'center', gap: 10,
-    }}>
-      <div style={{
-        width: 22, height: 22, borderRadius: 11,
-        background: available ? T.green : 'rgba(148,163,184,0.3)',
-        color: '#0b0d10', fontSize: 11, fontWeight: 800,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: T.mono, flexShrink: 0,
-      }}>{available ? '✓' : '×'}</div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: available ? T.text : T.textDim }}>{name}</div>
-        <div style={{ fontFamily: T.mono, fontSize: 9.5, color: available ? '#4ade80' : T.textMuted, letterSpacing: 1, marginTop: 1 }}>
+    <div
+      className={`py-[11px] px-3.5 rounded-[5px] flex items-center gap-2.5 ring-1 ring-inset ${
+        available
+          ? 'bg-dispatch-green-soft ring-dispatch-green-edge'
+          : 'bg-[rgba(148,163,184,0.08)] ring-[rgba(148,163,184,0.2)]'
+      }`}
+    >
+      <div
+        className={`w-[22px] h-[22px] rounded-full text-[#0b0d10] text-[11px] font-extrabold flex items-center justify-center font-mono shrink-0 ${
+          available ? 'bg-dispatch-green' : 'bg-[rgba(148,163,184,0.3)]'
+        }`}
+      >
+        {available ? '✓' : '×'}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className={`text-[13px] font-semibold ${available ? 'text-dispatch-text' : 'text-dispatch-textDim'}`}>{name}</div>
+        <div className={`font-mono text-[9.5px] tracking-[1px] mt-px ${available ? 'text-[#4ade80]' : 'text-dispatch-textMuted'}`}>
           {available ? 'AVAILABLE' : 'UNAVAILABLE'}
         </div>
       </div>
@@ -171,76 +180,72 @@ const HospitalPage = () => {
   ], [details])
 
   return (
-    <div style={{
-      height: 'calc(100vh - 52px)',
-      background: T.bg,
-      display: 'grid', gridTemplateColumns: '40% 60%',
-      gap: 10, padding: 10,
-      fontFamily: T.ui, color: T.text, boxSizing: 'border-box',
-    }}>
+    <div
+      className="bg-dispatch-bg grid gap-2.5 p-2.5 font-ui text-dispatch-text box-border"
+      style={{ height: 'calc(100vh - 52px)', gridTemplateColumns: '40% 60%' }}
+    >
       {/* LEFT — Search + list */}
-      <div style={{ background: T.bgElev, borderRadius: 6, boxShadow: `inset 0 0 0 1px ${T.line}`, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div className="bg-dispatch-elev rounded-md ring-1 ring-inset ring-dispatch-line flex flex-col min-h-0">
         <PanelHeader
           title="이송병원 현황"
           subtitle="TRANSPORT DESTINATIONS"
           trailing={import.meta.env.DEV && (
-            <span style={{
-              fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: 1,
-              background: T.amberSoft, color: T.amber,
-              padding: '3px 6px', borderRadius: 3,
-              boxShadow: `inset 0 0 0 1px rgba(245,158,11,0.35)`,
-            }}>🔧 DEV</span>
+            <span className="font-mono text-[9px] font-bold tracking-[1px] bg-dispatch-amber-soft text-dispatch-amber py-[3px] px-1.5 rounded-[3px] ring-1 ring-inset ring-[rgba(245,158,11,0.35)]">
+              🔧 DEV
+            </span>
           )}
         />
 
-        <div style={{ padding: 12, display: 'flex', gap: 6, borderBottom: `1px solid ${T.lineSoft}`, flexShrink: 0 }}>
+        <div className="p-3 flex gap-1.5 border-b border-dispatch-lineSoft shrink-0">
           <input
             type="text" value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && search()}
             placeholder="주소를 입력하세요 (예: 서울 마포구)"
-            style={{
-              flex: 1, fontFamily: T.ui, fontSize: 13, padding: '9px 12px',
-              background: T.bgCard, color: T.text, border: 'none', borderRadius: 4,
-              boxShadow: `inset 0 0 0 1px ${T.line}`, outline: 'none',
-            }}
+            className="flex-1 font-ui text-[13px] py-[9px] px-3 bg-dispatch-card text-dispatch-text border-0 rounded ring-1 ring-inset ring-dispatch-line outline-none"
           />
-          <button onClick={search}
-            style={{
-              cursor: 'pointer', fontFamily: T.ui, border: 'none',
-              background: T.accentBlue, color: '#fff',
-              fontSize: 13, fontWeight: 600, padding: '0 18px', borderRadius: 4,
-            }}>검색</button>
+          <button
+            onClick={search}
+            className="cursor-pointer font-ui border-0 bg-dispatch-blue text-white text-[13px] font-semibold px-[18px] rounded"
+          >검색</button>
         </div>
 
-        <div className="dispatch-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 8 }}>
+        <div className="dispatch-scroll flex-1 min-h-0 overflow-y-auto p-2">
           {listLoading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-              <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${T.line}`, borderTopColor: T.accentBlue, animation: 'dispatchSpin 0.9s linear infinite' }} />
+            <div className="flex justify-center py-10">
+              <div
+                className="w-5 h-5 rounded-full border-2 border-dispatch-line"
+                style={{ borderTopColor: '#3b82f6', animation: 'dispatchSpin 0.9s linear infinite' }}
+              />
             </div>
           ) : error ? (
-            <div style={{ padding: 16, color: '#fca5a5', fontSize: 12 }}>서버 오류: {error}</div>
+            <div className="p-4 text-[#fca5a5] text-xs">서버 오류: {error}</div>
           ) : hospitals.map(h => {
             const active = h.pid === selectedPid
             const mins   = parseInt(h.time, 10) || 0
-            const tc     = mins <= 10 ? T.green : mins <= 20 ? T.amber : T.red
+            const timeColor = mins <= 10 ? '#22c55e' : mins <= 20 ? '#f59e0b' : '#ef4444'
             return (
-              <button key={h.pid}
+              <button
+                key={h.pid}
                 onClick={() => loadDetails(h.pid)}
-                style={{
-                  width: '100%', display: 'block', textAlign: 'left',
-                  border: 'none', cursor: 'pointer', fontFamily: T.ui,
-                  background: active ? T.accentBlueSoft : 'transparent',
-                  padding: '12px 12px 12px 14px',
-                  borderRadius: 4, marginBottom: 2, position: 'relative', color: T.text,
-                }}>
-                {active && <span style={{ position: 'absolute', left: 0, top: 8, bottom: 8, width: 3, background: T.accentBlue, borderRadius: 2 }} />}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: active ? '#dbeafe' : T.text, letterSpacing: -0.2 }}>{h.name}</span>
-                  <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 700, color: tc, padding: '2px 8px', borderRadius: 3, background: `${tc}1a`, boxShadow: `inset 0 0 0 1px ${tc}55`, flexShrink: 0 }}>{h.time}</span>
+                className={`w-full block text-left border-0 cursor-pointer font-ui py-3 pr-3 pl-3.5 rounded mb-0.5 relative text-dispatch-text ${
+                  active ? 'bg-dispatch-blue-soft' : 'bg-transparent'
+                }`}
+              >
+                {active && <span className="absolute left-0 top-2 bottom-2 w-[3px] bg-dispatch-blue rounded-sm" />}
+                <div className="flex justify-between items-center gap-2.5 mb-1.5">
+                  <span className={`text-sm font-semibold tracking-[-0.2px] ${active ? 'text-[#dbeafe]' : 'text-dispatch-text'}`}>{h.name}</span>
+                  <span
+                    className="font-mono text-[11px] font-bold py-0.5 px-2 rounded-[3px] shrink-0"
+                    style={{
+                      color: timeColor,
+                      background: `${timeColor}1a`,
+                      boxShadow: `inset 0 0 0 1px ${timeColor}55`,
+                    }}
+                  >{h.time}</span>
                 </div>
-                <div style={{ fontSize: 11, color: T.textDim, marginBottom: 3 }}>{h.location}</div>
-                <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.textMuted, letterSpacing: 0.5 }}>☎ {h.call}</div>
+                <div className="text-[11px] text-dispatch-textDim mb-[3px]">{h.location}</div>
+                <div className="font-mono text-[10.5px] text-dispatch-textMuted tracking-[0.5px]">☎ {h.call}</div>
               </button>
             )
           })}
@@ -248,63 +253,68 @@ const HospitalPage = () => {
       </div>
 
       {/* RIGHT — Detail */}
-      <div style={{ background: T.bgElev, borderRadius: 6, boxShadow: `inset 0 0 0 1px ${T.line}`, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div className="bg-dispatch-elev rounded-md ring-1 ring-inset ring-dispatch-line flex flex-col min-h-0">
         {!selected ? (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: T.textMuted, gap: 16 }}>
-            <div style={{ width: 64, height: 64, borderRadius: 32, background: T.bgCard, boxShadow: `inset 0 0 0 1px ${T.line}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: T.mono, fontSize: 22 }}>🛏</div>
-            <div style={{ fontSize: 14 }}>이송병원을 선택해 주세요</div>
-            <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1 }}>← SELECT A HOSPITAL</div>
+          <div className="flex-1 flex flex-col items-center justify-center text-dispatch-textMuted gap-4">
+            <div className="w-16 h-16 rounded-full bg-dispatch-card ring-1 ring-inset ring-dispatch-line flex items-center justify-center font-mono text-[22px]">
+              🛏
+            </div>
+            <div className="text-sm">이송병원을 선택해 주세요</div>
+            <div className="font-mono text-[10px] tracking-[1px]">← SELECT A HOSPITAL</div>
           </div>
         ) : (
           <>
-            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${T.lineSoft}`, flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: T.mono, fontSize: 10, color: T.textMuted, letterSpacing: 1.4, marginBottom: 4 }}>HOSPITAL · {selected.pid}</div>
-                  <h2 style={{ margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: -0.5, color: T.text }}>{selected.name}</h2>
-                  <div style={{ marginTop: 8, display: 'flex', gap: 18, flexWrap: 'wrap' as const, fontSize: 12, color: T.textDim }}>
+            <div className="py-5 px-6 border-b border-dispatch-lineSoft shrink-0">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px] mb-1">HOSPITAL · {selected.pid}</div>
+                  <h2 className="m-0 text-[22px] font-semibold tracking-[-0.5px] text-dispatch-text">{selected.name}</h2>
+                  <div className="mt-2 flex gap-[18px] flex-wrap text-xs text-dispatch-textDim">
                     <span>📍 {selected.location}</span>
-                    <span style={{ fontFamily: T.mono }}>☎ {selected.call}</span>
+                    <span className="font-mono">☎ {selected.call}</span>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: T.mono, fontSize: 10, color: T.textMuted, letterSpacing: 1.3 }}>ETA · 예상 이송</div>
-                  <div style={{ fontFamily: T.mono, fontSize: 28, fontWeight: 700, color: '#93c5fd', letterSpacing: -1 }}>{selected.time}</div>
+                <div className="text-right shrink-0">
+                  <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.3px]">ETA · 예상 이송</div>
+                  <div className="font-mono text-[28px] font-bold text-[#93c5fd] tracking-[-1px]">{selected.time}</div>
                 </div>
               </div>
             </div>
 
-            <div className="dispatch-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 24px' }}>
+            <div className="dispatch-scroll flex-1 min-h-0 overflow-y-auto py-5 px-6">
               {detailLoading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${T.line}`, borderTopColor: T.accentBlue, animation: 'dispatchSpin 0.9s linear infinite' }} />
+                <div className="flex justify-center py-10">
+                  <div
+                    className="w-6 h-6 rounded-full border-2 border-dispatch-line"
+                    style={{ borderTopColor: '#3b82f6', animation: 'dispatchSpin 0.9s linear infinite' }}
+                  />
                 </div>
               ) : !details ? (
-                <div style={{ padding: 20, color: T.textMuted, fontSize: 13 }}>병원 데이터를 찾을 수 없습니다.</div>
+                <div className="p-5 text-dispatch-textMuted text-[13px]">병원 데이터를 찾을 수 없습니다.</div>
               ) : (
                 <>
-                  <div style={{ marginBottom: 24 }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12 }}>
-                      <div style={{ fontFamily: T.mono, fontSize: 10, color: T.textMuted, letterSpacing: 1.4 }}>§1</div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: T.text }}>🛏 병상 현황</div>
-                      <div style={{ flex: 1, height: 1, background: T.lineSoft }} />
-                      <div style={{ fontFamily: T.mono, fontSize: 9.5, color: T.textMuted, letterSpacing: 1 }}>REALTIME · EDT</div>
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-2.5 mb-3">
+                      <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px]">§1</div>
+                      <div className="text-[15px] font-semibold text-dispatch-text">🛏 병상 현황</div>
+                      <div className="flex-1 h-px bg-dispatch-lineSoft" />
+                      <div className="font-mono text-[9.5px] text-dispatch-textMuted tracking-[1px]">REALTIME · EDT</div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div className="flex flex-col gap-1.5">
                       {beds.map(b => <BedRow key={b.label} {...b} />)}
                     </div>
                   </div>
 
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12 }}>
-                      <div style={{ fontFamily: T.mono, fontSize: 10, color: T.textMuted, letterSpacing: 1.4 }}>§2</div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: T.text }}>🔬 장비 현황</div>
-                      <div style={{ flex: 1, height: 1, background: T.lineSoft }} />
-                      <div style={{ fontFamily: T.mono, fontSize: 9.5, color: T.textMuted, letterSpacing: 1 }}>
+                    <div className="flex items-baseline gap-2.5 mb-3">
+                      <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px]">§2</div>
+                      <div className="text-[15px] font-semibold text-dispatch-text">🔬 장비 현황</div>
+                      <div className="flex-1 h-px bg-dispatch-lineSoft" />
+                      <div className="font-mono text-[9.5px] text-dispatch-textMuted tracking-[1px]">
                         {equipment.filter(e => e.available).length} / {equipment.length} · ONLINE
                       </div>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                    <div className="grid grid-cols-2 gap-2">
                       {equipment.map(e => <EquipChip key={e.name} {...e} />)}
                     </div>
                   </div>

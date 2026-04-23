@@ -10,7 +10,6 @@ import HospitalPage from './Hospital/HospitalPage'
 import NavbarForm from './Navbar'
 import { useHotkey } from './hooks/useHotkey'
 import FakeCallPanel from './dev/FakeCallPanel'
-import { T } from './lib/theme'
 
 function AppRoutes() {
   const navigate = useNavigate()
@@ -21,7 +20,7 @@ function AppRoutes() {
   useHotkey('ctrl+2', () => navigate('/hospital'))
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: T.bg }}>
+    <div className="flex flex-col h-screen bg-dispatch-bg">
       <NavbarForm />
       <Routes>
         <Route path="/login"   element={<LoginForm />} />
@@ -31,17 +30,9 @@ function AppRoutes() {
         <Route
           path="/"
           element={
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+            <div className="flex flex-col flex-1 min-h-0">
               <IncidentHeader />
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 3fr 1fr',
-                gap: 10,
-                padding: 10,
-                flex: 1,
-                minHeight: 0,
-                boxSizing: 'border-box',
-              }}>
+              <div className="grid grid-cols-[1fr_3fr_1fr] gap-2.5 p-2.5 flex-1 min-h-0 box-border">
                 <Sidebar />
                 <ManualSection />
                 <ConversationBox />

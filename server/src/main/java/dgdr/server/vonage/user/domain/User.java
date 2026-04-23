@@ -1,6 +1,7 @@
 package dgdr.server.vonage.user.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import dgdr.server.vonage.Call;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,9 +20,12 @@ public class User {
 
     private String name;
 
+    @JsonIgnore
     private String password;
 
     private String phone;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<Call> calls;
 }

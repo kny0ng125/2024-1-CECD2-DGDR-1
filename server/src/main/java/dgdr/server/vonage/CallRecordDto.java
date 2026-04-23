@@ -8,15 +8,15 @@ import java.time.LocalDateTime;
 @Getter
 public class CallRecordDto {
     private final Long id;
-    private final Call call;
+    private final String speaker;
     private final String speakerPhoneNumber;
     private final String transcription;
     private final LocalDateTime time;
 
     @Builder
-    public CallRecordDto(Long id, Call call, String speakerPhoneNumber, String transcription, LocalDateTime time) {
+    public CallRecordDto(Long id, String speaker, String speakerPhoneNumber, String transcription, LocalDateTime time) {
         this.id = id;
-        this.call = call;
+        this.speaker = speaker;
         this.speakerPhoneNumber = speakerPhoneNumber;
         this.transcription = transcription;
         this.time = time;
