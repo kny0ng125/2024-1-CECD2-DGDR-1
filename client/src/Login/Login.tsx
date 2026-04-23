@@ -2,26 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { authFetch } from '@/lib/authFetch'
-import { T } from '@/lib/theme'
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', fontFamily: T.ui, fontSize: 14,
-  padding: '10px 13px',
-  background: T.bgCard, color: T.text,
-  border: 'none', borderRadius: 5,
-  boxShadow: `inset 0 0 0 1px ${T.line}`,
-  outline: 'none',
-  boxSizing: 'border-box',
-  transition: 'box-shadow .15s',
-}
+const INPUT_CLASS =
+  'w-full font-ui text-sm py-2.5 px-[13px] bg-dispatch-card text-dispatch-text border-0 rounded-[5px] ring-1 ring-inset ring-dispatch-line outline-none box-border transition-shadow duration-150 focus:ring-[1.5px] focus:ring-dispatch-blue'
 
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontFamily: T.mono, fontSize: 9.5,
-  color: T.textMuted, letterSpacing: 1.4,
-  marginBottom: 6,
-  textTransform: 'uppercase',
-}
+const LABEL_CLASS =
+  'block font-mono text-[9.5px] text-dispatch-textMuted tracking-[1.4px] mb-1.5 uppercase'
 
 const LoginForm = () => {
   const navigate        = useNavigate()
@@ -61,138 +47,104 @@ const LoginForm = () => {
   }
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      height: '100vh', background: T.bg,
-      fontFamily: T.ui, color: T.text,
-    }}>
-      <div style={{
-        width: 420,
-        background: T.bgElev,
-        borderRadius: 8,
-        boxShadow: `0 20px 60px rgba(0,0,0,0.5), inset 0 0 0 1px ${T.line}`,
-        padding: '36px 32px',
-      }}>
+    <div className="flex items-center justify-center h-screen bg-dispatch-bg font-ui text-dispatch-text">
+      <div
+        className="w-[420px] bg-dispatch-elev rounded-lg py-9 px-8 ring-1 ring-inset ring-dispatch-line"
+        style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}
+      >
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 40, height: 40, borderRadius: 8,
-            background: T.red, marginBottom: 14,
-            fontFamily: T.mono, fontSize: 14, fontWeight: 700, color: '#fff',
-            letterSpacing: -0.5,
-          }}>119</div>
-          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: -0.3, color: T.text }}>
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-dispatch-red mb-3.5 font-mono text-sm font-bold text-white tracking-[-0.5px]">
+            119
+          </div>
+          <div className="text-[18px] font-semibold tracking-[-0.3px] text-dispatch-text">
             119 수보 시스템
           </div>
-          <div style={{ fontFamily: T.mono, fontSize: 10, color: T.textMuted, letterSpacing: 1.4, marginTop: 4 }}>
+          <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px] mt-1">
             DISPATCH · OPERATOR LOGIN
           </div>
         </div>
 
         {/* Divider */}
-        <div style={{ height: 1, background: T.line, marginBottom: 28 }} />
+        <div className="h-px bg-dispatch-line mb-7" />
 
         <form onSubmit={handleLogin}>
           {/* ID */}
-          <div style={{ marginBottom: 18 }}>
-            <label style={labelStyle}>아이디 · ID</label>
+          <div className="mb-[18px]">
+            <label className={LABEL_CLASS}>아이디 · ID</label>
             <input
               type="text"
               placeholder="요원 아이디 입력"
               value={account}
               onChange={e => setAccount(e.target.value)}
-              style={inputStyle}
-              onFocus={e => e.currentTarget.style.boxShadow = `inset 0 0 0 1.5px ${T.accentBlue}`}
-              onBlur={e => e.currentTarget.style.boxShadow = `inset 0 0 0 1px ${T.line}`}
+              className={INPUT_CLASS}
             />
           </div>
 
           {/* Password */}
-          <div style={{ marginBottom: 24 }}>
-            <label style={labelStyle}>비밀번호 · PASSWORD</label>
+          <div className="mb-6">
+            <label className={LABEL_CLASS}>비밀번호 · PASSWORD</label>
             <input
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              style={inputStyle}
-              onFocus={e => e.currentTarget.style.boxShadow = `inset 0 0 0 1.5px ${T.accentBlue}`}
-              onBlur={e => e.currentTarget.style.boxShadow = `inset 0 0 0 1px ${T.line}`}
+              className={INPUT_CLASS}
             />
           </div>
 
           {/* Error */}
           {error && (
-            <div style={{
-              padding: '10px 13px', marginBottom: 16,
-              background: T.redSoft, boxShadow: `inset 0 0 0 1px ${T.redEdge}`,
-              borderRadius: 5, color: '#fca5a5',
-              fontFamily: T.mono, fontSize: 11, letterSpacing: 0.3,
-            }}>
+            <div className="py-2.5 px-[13px] mb-4 bg-dispatch-red-soft ring-1 ring-inset ring-dispatch-red-edge rounded-[5px] text-[#fca5a5] font-mono text-[11px] tracking-[0.3px]">
               ✖ {error}
             </div>
           )}
 
           {/* Login button */}
-          <button type="submit" disabled={loading}
-            style={{
-              width: '100%', padding: '11px 0',
-              background: loading ? T.accentBlueSoft : T.accentBlue,
-              color: loading ? '#93c5fd' : '#fff',
-              border: 'none', borderRadius: 5,
-              fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
-              fontFamily: T.ui, letterSpacing: -0.2,
-              transition: 'background .15s',
-              boxShadow: loading ? `inset 0 0 0 1px ${T.accentBlueEdge}` : 'none',
-            }}>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-[11px] border-0 rounded-[5px] text-sm font-semibold font-ui tracking-[-0.2px] transition-colors duration-150 ${
+              loading
+                ? 'bg-dispatch-blue-soft text-[#93c5fd] cursor-not-allowed ring-1 ring-inset ring-dispatch-blue-edge'
+                : 'bg-dispatch-blue text-white cursor-pointer'
+            }`}
+          >
             {loading ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <span style={{
-                  width: 12, height: 12, borderRadius: '50%',
-                  border: `2px solid rgba(147,197,253,0.3)`,
-                  borderTopColor: '#93c5fd',
-                  display: 'inline-block',
-                  animation: 'dispatchSpin 0.9s linear infinite',
-                }} />
+              <span className="inline-flex items-center gap-2">
+                <span
+                  className="w-3 h-3 rounded-full inline-block"
+                  style={{
+                    border: '2px solid rgba(147,197,253,0.3)',
+                    borderTopColor: '#93c5fd',
+                    animation: 'dispatchSpin 0.9s linear infinite',
+                  }}
+                />
                 로그인 중…
               </span>
             ) : '로그인'}
           </button>
 
           {/* Secondary actions */}
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button type="button"
-              style={{
-                flex: 1, padding: '9px 0',
-                background: 'transparent', color: T.textDim,
-                border: 'none', borderRadius: 5, fontSize: 13,
-                cursor: 'pointer', fontFamily: T.ui,
-                boxShadow: `inset 0 0 0 1px ${T.line}`,
-              }}>
+          <div className="flex gap-2 mt-3">
+            <button
+              type="button"
+              className="flex-1 py-[9px] bg-transparent text-dispatch-textDim border-0 rounded-[5px] text-[13px] cursor-pointer font-ui ring-1 ring-inset ring-dispatch-line"
+            >
               아이디/PW 찾기
             </button>
-            <button type="button"
+            <button
+              type="button"
               onClick={() => navigate('/signup')}
-              style={{
-                flex: 1, padding: '9px 0',
-                background: 'transparent', color: T.textDim,
-                border: 'none', borderRadius: 5, fontSize: 13,
-                cursor: 'pointer', fontFamily: T.ui,
-                boxShadow: `inset 0 0 0 1px ${T.line}`,
-              }}>
+              className="flex-1 py-[9px] bg-transparent text-dispatch-textDim border-0 rounded-[5px] text-[13px] cursor-pointer font-ui ring-1 ring-inset ring-dispatch-line"
+            >
               회원가입
             </button>
           </div>
         </form>
 
         {/* Footer */}
-        <div style={{
-          marginTop: 28, paddingTop: 20,
-          borderTop: `1px solid ${T.line}`,
-          textAlign: 'center',
-          fontFamily: T.mono, fontSize: 9.5, color: T.textMuted, letterSpacing: 1,
-        }}>
+        <div className="mt-7 pt-5 border-t border-dispatch-line text-center font-mono text-[9.5px] text-dispatch-textMuted tracking-[1px]">
           AUTHORIZED PERSONNEL ONLY · 권한 있는 요원 전용
         </div>
       </div>
