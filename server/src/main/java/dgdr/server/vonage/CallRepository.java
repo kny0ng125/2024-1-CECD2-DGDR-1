@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface CallRepository extends JpaRepository<Call, Long> {
-    @Query("SELECT c FROM Call c WHERE c.user.userId = :userId ORDER BY c.startTime DESC")
+    @Query("SELECT c FROM Call c WHERE c.user.userId = :userId ORDER BY c.startTime DESC LIMIT 1")
     Call findFirstByOrderByStartTimeDesc(String userId);
     @Query("SELECT c FROM Call c WHERE c.user.userId = :userId AND c.startTime BETWEEN :startTime AND :startTime2")
     List<Call> findAllByStartTimeBetween(String userId, LocalDateTime startTime, LocalDateTime startTime2);
