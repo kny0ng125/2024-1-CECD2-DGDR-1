@@ -13,12 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
 public class CallController {
     private final CallService callService;
     private final CallTranscriptCache transcriptCache;
+    private final ManualService manualService;
 
     @GetMapping("/api/v1/call")
     public ResponseEntity<List<CallDto>> getCallList(
@@ -61,5 +63,11 @@ public class CallController {
     ) {
         callService.assertOwnership(callId, principalDetails.getUsername());
         return transcriptCache.subscribe(callId);
+    }
+
+    @GetMapping("/manual/{callId}")
+    public ResponseEntity<Map<String, Object>> sendManual(@PathVariable Long callId) {
+        Map<String, Object> response = manualService.getManual(callId);
+        return ResponseEntity.ok(response);
     }
 }
