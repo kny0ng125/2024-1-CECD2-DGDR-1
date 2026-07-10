@@ -1,9 +1,12 @@
-package dgdr.server.vonage;
+package dgdr.server.vonage.telephony;
 
 import com.nbp.cdncp.nest.grpc.proto.v1.NestRequest;
-import dgdr.server.vonage.clova.CallTranscriptCache;
-import dgdr.server.vonage.clova.ClovaStreamingClient;
-import dgdr.server.vonage.clova.SttResult;
+import dgdr.server.vonage.call.Call;
+import dgdr.server.vonage.call.CallRepository;
+import dgdr.server.vonage.call.CallService;
+import dgdr.server.vonage.transcript.CallTranscriptCache;
+import dgdr.server.vonage.stt.ClovaStreamingClient;
+import dgdr.server.vonage.stt.SttResult;
 import dgdr.server.vonage.user.infra.UserRepository;
 import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;

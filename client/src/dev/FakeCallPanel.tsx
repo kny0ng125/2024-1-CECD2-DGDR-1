@@ -35,7 +35,11 @@ const FakeCallPanel = () => {
     try {
       const res = await authFetch('/api/v1/dev/fake-call/start', {
         method: 'POST',
-        body: JSON.stringify({ scenarioId, speedMultiplier: speed }),
+        body: JSON.stringify({
+          mode: 'transcript',
+          scenarioId: 'overlap-test',   // ★ 무조건 동시발화 시나리오
+          speedMultiplier: speed,
+        }),
       })
       if (!res.ok) throw new Error(`${res.status} ${await res.text()}`)
       const status: FakeCallStatus = await res.json()

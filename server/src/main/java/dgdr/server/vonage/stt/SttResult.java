@@ -1,4 +1,4 @@
-package dgdr.server.vonage.clova;
+package dgdr.server.vonage.stt;
 
 public record SttResult(
         String text,

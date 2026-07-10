@@ -1,4 +1,4 @@
-package dgdr.server.vonage;
+package dgdr.server.vonage.global;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

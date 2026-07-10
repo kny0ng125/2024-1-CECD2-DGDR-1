@@ -1,4 +1,4 @@
-package dgdr.server.vonage.clova;
+package dgdr.server.vonage.transcript;
 
 import java.time.LocalDateTime;
 

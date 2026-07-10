@@ -1,7 +1,7 @@
-package dgdr.server.vonage;
+package dgdr.server.vonage.call;
 
-import dgdr.server.vonage.clova.CallTranscriptCache;
-import dgdr.server.vonage.clova.TranscriptEntry;
+import dgdr.server.vonage.transcript.CallTranscriptCache;
+import dgdr.server.vonage.transcript.TranscriptEntry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

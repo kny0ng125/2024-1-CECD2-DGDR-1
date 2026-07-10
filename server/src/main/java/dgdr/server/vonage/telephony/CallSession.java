@@ -1,5 +1,6 @@
-package dgdr.server.vonage;
+package dgdr.server.vonage.telephony;
 
+import dgdr.server.vonage.call.Call;
 import lombok.Getter;
 import lombok.Setter;
 

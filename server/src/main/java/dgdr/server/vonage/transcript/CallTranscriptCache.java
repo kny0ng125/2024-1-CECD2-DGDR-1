@@ -1,4 +1,4 @@
-package dgdr.server.vonage.clova;
+package dgdr.server.vonage.transcript;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;

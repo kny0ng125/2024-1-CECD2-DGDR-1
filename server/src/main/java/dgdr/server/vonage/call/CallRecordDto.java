@@ -1,4 +1,4 @@
-package dgdr.server.vonage;
+package dgdr.server.vonage.call;
 
 import lombok.Builder;
 import lombok.Getter;

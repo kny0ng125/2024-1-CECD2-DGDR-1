@@ -1,4 +1,4 @@
-package dgdr.server.vonage;
+package dgdr.server.vonage.call;
 
 import dgdr.server.vonage.user.domain.User;
 import jakarta.persistence.*;

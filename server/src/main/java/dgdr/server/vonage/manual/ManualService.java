@@ -1,7 +1,9 @@
-package dgdr.server.vonage;
+package dgdr.server.vonage.manual;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dgdr.server.vonage.call.CallRecordDto;
+import dgdr.server.vonage.call.CallService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;

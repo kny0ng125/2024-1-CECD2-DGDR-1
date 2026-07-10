@@ -1,4 +1,4 @@
-package dgdr.server.vonage.clova;
+package dgdr.server.vonage.stt;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

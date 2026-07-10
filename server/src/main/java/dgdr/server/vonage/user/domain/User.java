@@ -2,7 +2,7 @@ package dgdr.server.vonage.user.domain;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dgdr.server.vonage.Call;
+import dgdr.server.vonage.call.Call;
 import jakarta.persistence.*;
 import lombok.*;
 
