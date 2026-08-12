@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Phone } from 'lucide-react'
 import { useCallStore } from '@/stores/useCallStore'
 
 function fmtElapsed(sec: number): string {
@@ -32,17 +33,11 @@ const IncidentHeader = () => {
     >
       {/* Caller indicator */}
       <div className="flex items-center gap-2">
-        <span
-          className={`inline-flex items-center justify-center w-[18px] h-[18px] rounded text-[10px] ring-1 ring-inset ${
-            isCallActive
-              ? 'bg-dispatch-blue-soft text-[#93c5fd] ring-dispatch-blue-edge'
-              : 'bg-transparent text-dispatch-textMuted ring-dispatch-line'
-          }`}
-        >
-          ☎
-        </span>
-        <span className="font-mono text-[9px] tracking-[1.2px] text-dispatch-textMuted">발신번호</span>
-        <span className="font-mono text-[13px] font-semibold text-dispatch-text">
+        <Phone
+          size={14}
+          className={isCallActive ? 'text-[#93c5fd]' : 'text-dispatch-textMuted'}
+        />
+        <span className="text-[13px] font-semibold text-dispatch-text">
           {isCallActive ? '통화 중' : '대기 중'}
         </span>
       </div>
@@ -51,7 +46,7 @@ const IncidentHeader = () => {
 
       {/* elapsed + LIVE badge */}
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[9px] text-dispatch-textMuted tracking-[1.2px]">경과</span>
+        <span className="text-[11px] text-dispatch-textMuted">통화 시간</span>
         <span
           className={`font-mono text-sm font-bold tabular-nums ${
             elapsed > 180 ? 'text-dispatch-amber' : 'text-dispatch-text'
@@ -60,12 +55,12 @@ const IncidentHeader = () => {
           {fmtElapsed(elapsed)}
         </span>
         {isCallActive && (
-          <span className="inline-flex items-center gap-1 font-mono text-[9px] font-bold tracking-[1.4px] text-dispatch-red ml-1">
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-dispatch-red ml-1">
             <span
               className="w-1.5 h-1.5 rounded-full bg-dispatch-red"
               style={{ animation: 'dispatchPulse 1.6s infinite' }}
             />
-            LIVE
+            실시간
           </span>
         )}
       </div>

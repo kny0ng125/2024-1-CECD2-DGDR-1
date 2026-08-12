@@ -30,7 +30,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'javazoom:jlayer:1.0.1'
-    runtimeOnly 'com.h2database:h2'
+
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    // H2 는 테스트 전용 (운영/개발 기동은 docker-compose 의 MySQL 사용)
+    testRuntimeOnly 'com.h2database:h2'
 
     implementation 'software.amazon.awssdk:sagemakerruntime:2.25.70'
     implementation 'org.apache.commons:commons-text:1.11.0'

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Check, X, Phone, MapPin, Building2 } from 'lucide-react'
 import { authFetch } from '@/lib/authFetch'
 
 interface Hospital {
@@ -32,22 +33,21 @@ const DUMMY_DETAILS: Record<string, HospitalDetails> = {
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
-function PanelHeader({ title, subtitle, trailing }: {
-  title: string; subtitle: string; trailing?: React.ReactNode
+function PanelHeader({ title, trailing }: {
+  title: string; trailing?: React.ReactNode
 }) {
   return (
     <div className="flex items-center px-3.5 py-3 border-b border-dispatch-lineSoft shrink-0">
       <div className="flex-1 min-w-0">
-        <div className="text-[10px] font-semibold tracking-[1.6px] uppercase text-dispatch-textMuted font-mono">{subtitle}</div>
-        <div className="text-sm font-semibold text-dispatch-text tracking-[-0.2px] mt-px">{title}</div>
+        <div className="text-sm font-semibold text-dispatch-text tracking-[-0.2px]">{title}</div>
       </div>
       {trailing}
     </div>
   )
 }
 
-function BedRow({ label, subLabel, available, total }: {
-  label: string; subLabel: string; available: number; total: number | null
+function BedRow({ label, available, total }: {
+  label: string; available: number; total: number | null
 }) {
   const state = available === 0 ? 'red' : available <= 3 ? 'amber' : 'green'
   const styles = {
@@ -74,13 +74,12 @@ function BedRow({ label, subLabel, available, total }: {
     <div className={`flex items-center py-3 px-3.5 rounded-[5px] gap-3 ${styles.wrap}`}>
       <div className="flex-1 min-w-0">
         <div className="text-[13px] font-semibold text-dispatch-text tracking-[-0.2px]">{label}</div>
-        <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[0.8px] mt-0.5">{subLabel}</div>
       </div>
       <div className="flex items-baseline gap-1 font-mono tabular-nums">
         <span className={`text-[22px] font-bold tracking-[-0.5px] ${styles.number}`}>{available}</span>
         {total != null && <span className="text-xs text-dispatch-textMuted">/ {total}</span>}
       </div>
-      <div className={`font-mono text-[9px] font-bold tracking-[1px] text-[#0b0d10] py-[3px] px-[7px] rounded-[3px] min-w-[62px] text-center ${styles.tag}`}>
+      <div className={`text-[11px] font-semibold text-[#0b0d10] py-[3px] px-2 rounded-[3px] min-w-[62px] text-center ${styles.tag}`}>
         {styles.label}
       </div>
     </div>
@@ -97,16 +96,16 @@ function EquipChip({ name, available }: { name: string; available: boolean }) {
       }`}
     >
       <div
-        className={`w-[22px] h-[22px] rounded-full text-[#0b0d10] text-[11px] font-extrabold flex items-center justify-center font-mono shrink-0 ${
+        className={`w-[22px] h-[22px] rounded-full text-[#0b0d10] flex items-center justify-center shrink-0 ${
           available ? 'bg-dispatch-green' : 'bg-[rgba(148,163,184,0.3)]'
         }`}
       >
-        {available ? '✓' : '×'}
+        {available ? <Check size={13} strokeWidth={3} /> : <X size={13} strokeWidth={3} />}
       </div>
       <div className="flex-1 min-w-0">
         <div className={`text-[13px] font-semibold ${available ? 'text-dispatch-text' : 'text-dispatch-textDim'}`}>{name}</div>
-        <div className={`font-mono text-[9.5px] tracking-[1px] mt-px ${available ? 'text-[#4ade80]' : 'text-dispatch-textMuted'}`}>
-          {available ? 'AVAILABLE' : 'UNAVAILABLE'}
+        <div className={`text-[11px] mt-px ${available ? 'text-[#4ade80]' : 'text-dispatch-textMuted'}`}>
+          {available ? '보유' : '미보유'}
         </div>
       </div>
     </div>
@@ -161,13 +160,13 @@ const HospitalPage = () => {
   }
 
   const beds = useMemo(() => !details ? [] : [
-    { label: '응급실',    subLabel: 'EMERGENCY ROOM',  available: details.emergencyRoomAvailable,      total: details.emergencyRoomDefault },
-    { label: '소아 응급실', subLabel: 'PEDIATRIC ER',    available: details.emergencyRoomChildAvailable,  total: details.emergencyRoomChildDefault },
-    { label: '수술실',    subLabel: 'OPERATING ROOM',   available: details.operatingRoom,               total: null },
-    { label: '신경외과',   subLabel: 'NEUROSURGERY',     available: details.neurosurgeryRoom,             total: null },
-    { label: '신생아실',   subLabel: 'NEONATAL',         available: details.neonatalRoom,                 total: null },
-    { label: '흉부외과',   subLabel: 'THORACIC',         available: details.thoracicRoom,                 total: null },
-    { label: '일반 병동',  subLabel: 'GENERAL WARD',     available: details.generalRoom,                  total: null },
+    { label: '응급실',    available: details.emergencyRoomAvailable,      total: details.emergencyRoomDefault },
+    { label: '소아 응급실', available: details.emergencyRoomChildAvailable,  total: details.emergencyRoomChildDefault },
+    { label: '수술실',    available: details.operatingRoom,               total: null },
+    { label: '신경외과',   available: details.neurosurgeryRoom,             total: null },
+    { label: '신생아실',   available: details.neonatalRoom,                 total: null },
+    { label: '흉부외과',   available: details.thoracicRoom,                 total: null },
+    { label: '일반 병동',  available: details.generalRoom,                  total: null },
   ], [details])
 
   const equipment = useMemo(() => !details ? [] : [
@@ -188,10 +187,9 @@ const HospitalPage = () => {
       <div className="bg-dispatch-elev rounded-md ring-1 ring-inset ring-dispatch-line flex flex-col min-h-0">
         <PanelHeader
           title="이송병원 현황"
-          subtitle="TRANSPORT DESTINATIONS"
           trailing={import.meta.env.DEV && (
-            <span className="font-mono text-[9px] font-bold tracking-[1px] bg-dispatch-amber-soft text-dispatch-amber py-[3px] px-1.5 rounded-[3px] ring-1 ring-inset ring-[rgba(245,158,11,0.35)]">
-              🔧 DEV
+            <span className="text-[11px] font-semibold bg-dispatch-amber-soft text-dispatch-amber py-[3px] px-2 rounded-[3px] ring-1 ring-inset ring-[rgba(245,158,11,0.35)]">
+              샘플 데이터
             </span>
           )}
         />
@@ -245,7 +243,7 @@ const HospitalPage = () => {
                   >{h.time}</span>
                 </div>
                 <div className="text-[11px] text-dispatch-textDim mb-[3px]">{h.location}</div>
-                <div className="font-mono text-[10.5px] text-dispatch-textMuted tracking-[0.5px]">☎ {h.call}</div>
+                <div className="text-[11px] text-dispatch-textMuted">{h.call}</div>
               </button>
             )
           })}
@@ -255,28 +253,24 @@ const HospitalPage = () => {
       {/* RIGHT — Detail */}
       <div className="bg-dispatch-elev rounded-md ring-1 ring-inset ring-dispatch-line flex flex-col min-h-0">
         {!selected ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-dispatch-textMuted gap-4">
-            <div className="w-16 h-16 rounded-full bg-dispatch-card ring-1 ring-inset ring-dispatch-line flex items-center justify-center font-mono text-[22px]">
-              🛏
-            </div>
-            <div className="text-sm">이송병원을 선택해 주세요</div>
-            <div className="font-mono text-[10px] tracking-[1px]">← SELECT A HOSPITAL</div>
+          <div className="flex-1 flex flex-col items-center justify-center text-dispatch-textMuted gap-3">
+            <Building2 size={28} className="text-dispatch-textMuted" strokeWidth={1.5} />
+            <div className="text-[13px]">왼쪽 목록에서 이송병원을 선택해 주세요.</div>
           </div>
         ) : (
           <>
             <div className="py-5 px-6 border-b border-dispatch-lineSoft shrink-0">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px] mb-1">HOSPITAL · {selected.pid}</div>
                   <h2 className="m-0 text-[22px] font-semibold tracking-[-0.5px] text-dispatch-text">{selected.name}</h2>
                   <div className="mt-2 flex gap-[18px] flex-wrap text-xs text-dispatch-textDim">
-                    <span>📍 {selected.location}</span>
-                    <span className="font-mono">☎ {selected.call}</span>
+                    <span className="inline-flex items-center gap-1.5"><MapPin size={13} />{selected.location}</span>
+                    <span className="inline-flex items-center gap-1.5"><Phone size={13} />{selected.call}</span>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.3px]">ETA · 예상 이송</div>
-                  <div className="font-mono text-[28px] font-bold text-[#93c5fd] tracking-[-1px]">{selected.time}</div>
+                  <div className="text-[11px] text-dispatch-textMuted">예상 이송 시간</div>
+                  <div className="text-[28px] font-bold text-[#93c5fd] tracking-[-1px] tabular-nums">{selected.time}</div>
                 </div>
               </div>
             </div>
@@ -295,10 +289,8 @@ const HospitalPage = () => {
                 <>
                   <div className="mb-6">
                     <div className="flex items-baseline gap-2.5 mb-3">
-                      <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px]">§1</div>
-                      <div className="text-[15px] font-semibold text-dispatch-text">🛏 병상 현황</div>
+                      <div className="text-[15px] font-semibold text-dispatch-text">병상 현황</div>
                       <div className="flex-1 h-px bg-dispatch-lineSoft" />
-                      <div className="font-mono text-[9.5px] text-dispatch-textMuted tracking-[1px]">REALTIME · EDT</div>
                     </div>
                     <div className="flex flex-col gap-1.5">
                       {beds.map(b => <BedRow key={b.label} {...b} />)}
@@ -307,11 +299,10 @@ const HospitalPage = () => {
 
                   <div>
                     <div className="flex items-baseline gap-2.5 mb-3">
-                      <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px]">§2</div>
-                      <div className="text-[15px] font-semibold text-dispatch-text">🔬 장비 현황</div>
+                      <div className="text-[15px] font-semibold text-dispatch-text">장비 현황</div>
                       <div className="flex-1 h-px bg-dispatch-lineSoft" />
-                      <div className="font-mono text-[9.5px] text-dispatch-textMuted tracking-[1px]">
-                        {equipment.filter(e => e.available).length} / {equipment.length} · ONLINE
+                      <div className="text-[11px] text-dispatch-textMuted">
+                        {equipment.filter(e => e.available).length} / {equipment.length} 보유
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">

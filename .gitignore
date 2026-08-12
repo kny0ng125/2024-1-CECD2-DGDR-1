@@ -22,6 +22,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# docker-compose 환경변수 (.env.example 을 복사해서 사용)
+.env
+!.env.example
+
 # IDE
 .idea/
 .claude/
@@ -30,4 +34,11 @@ yarn-error.log*
 client/dist/
 
 # server secrets
-server/src/main/resources/
+# resources/ 전체를 무시하면 schema.sql·data.sql 이 공유되지 않으므로
+# 비밀값이 담긴 파일만 개별적으로 제외한다.
+server/src/main/resources/application.yml
+server/src/main/resources/application-*.yml
+!server/src/main/resources/application-example.yml
+server/src/main/resources/private.key
+server/src/main/resources/*.p12
+server/src/main/resources/audio/

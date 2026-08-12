@@ -3,24 +3,20 @@ import { useManualStore } from '@/stores/useManualStore'
 import { useCallStore } from '@/stores/useCallStore'
 
 const HINTS: Record<number, string> = {
-  1: '의식 · 호흡 · 맥박',
-  2: '위치 · 안전 · 목격자',
-  3: '응급처치 안내 · 자세 조정',
-  4: '출동 팀 배정 · 도착 예정',
+  1: '의식·호흡·맥박 확인',
+  2: '위치, 안전, 목격자 파악',
+  3: '응급처치 안내 및 자세 조정',
+  4: '출동 팀 배정 및 도착 예정 안내',
 }
 
-function PanelHeader({ title, subtitle, trailing }: {
+function PanelHeader({ title, trailing }: {
   title: string
-  subtitle: string
   trailing?: React.ReactNode
 }) {
   return (
     <div className="flex items-center px-3.5 py-3 border-b border-dispatch-lineSoft shrink-0">
       <div className="flex-1 min-w-0">
-        <div className="text-[10px] font-semibold tracking-[1.6px] uppercase text-dispatch-textMuted font-mono">
-          {subtitle}
-        </div>
-        <div className="text-sm font-semibold text-dispatch-text tracking-[-0.2px] mt-px">{title}</div>
+        <div className="text-sm font-semibold text-dispatch-text tracking-[-0.2px]">{title}</div>
       </div>
       {trailing}
     </div>
@@ -39,7 +35,7 @@ function ProtocolWizard({ protocols, onToggle }: {
     <div className="flex flex-col flex-1 min-h-0">
       {/* Progress bar */}
       <div className="pt-2 pb-2.5 px-3.5 border-b border-dispatch-lineSoft shrink-0">
-        <div className="flex justify-between font-mono text-[10px] tracking-[0.8px] text-dispatch-textMuted mb-[5px]">
+        <div className="flex justify-between text-[11px] text-dispatch-textMuted mb-[5px] tabular-nums">
           <span>{doneCount}<span className="text-dispatch-textMuted">/{protocols.length}</span> 완료</span>
           <span>{pct}%</span>
         </div>
@@ -98,7 +94,7 @@ function ProtocolWizard({ protocols, onToggle }: {
                   <span className="flex-1" />
                   <span className="font-mono text-[9px] text-dispatch-textMuted">Alt+{i + 1}</span>
                 </div>
-                <div className="font-mono text-[10px] text-dispatch-textMuted">
+                <div className="text-[11px] text-dispatch-textMuted">
                   {HINTS[p.id] ?? ''}
                 </div>
               </button>
@@ -131,10 +127,9 @@ const Sidebar = () => {
       <div className="bg-dispatch-elev rounded-md ring-1 ring-inset ring-dispatch-line flex flex-col flex-none max-h-[40%]">
         <PanelHeader
           title="열람 매뉴얼 목록"
-          subtitle="VIEWED MANUALS"
           trailing={
-            <span className="font-mono text-[10px] text-dispatch-textMuted tracking-[1px]">
-              {savedManuals.length} · SESSION
+            <span className="text-[11px] text-dispatch-textMuted">
+              {savedManuals.length}건
             </span>
           }
         />
@@ -166,9 +161,8 @@ const Sidebar = () => {
       <div className="bg-dispatch-elev rounded-md ring-1 ring-inset ring-dispatch-line flex flex-col flex-1 min-h-0">
         <PanelHeader
           title="수보 프로토콜 진행"
-          subtitle="PROTOCOL · STEPPER"
           trailing={
-            <span className="font-mono text-[11px] text-dispatch-textDim tracking-[0.5px]">
+            <span className="font-mono text-[11px] text-dispatch-textDim tabular-nums">
               {protocols.filter(p => p.completed).length}
               <span className="text-dispatch-textMuted">/{protocols.length}</span>
             </span>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { authFetch } from '@/lib/authFetch'
 
@@ -7,11 +7,15 @@ const INPUT_CLASS =
   'w-full font-ui text-sm py-2.5 px-[13px] bg-dispatch-card text-dispatch-text border-0 rounded-[5px] ring-1 ring-inset ring-dispatch-line outline-none box-border transition-shadow duration-150 focus:ring-[1.5px] focus:ring-dispatch-blue'
 
 const LABEL_CLASS =
-  'block font-mono text-[9.5px] text-dispatch-textMuted tracking-[1.4px] mb-1.5 uppercase'
+  'block text-xs font-medium text-dispatch-textDim mb-1.5'
 
 const LoginForm = () => {
   const navigate        = useNavigate()
+  const location        = useLocation()
   const { login }       = useAuthStore()
+
+  // RequireAuth 가 리다이렉트하며 넣어둔 원래 목적지. 없으면 메인으로.
+  const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/'
   const [account, setAccount]   = useState('')
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
@@ -35,7 +39,8 @@ const LoginForm = () => {
       const data = await res.json()
       if (data.accessToken && data.refreshToken) {
         login(data.accessToken, data.refreshToken)
-        navigate('/')
+        // replace: 로그인 화면을 히스토리에서 지워 뒤로가기로 되돌아오지 않게 한다.
+        navigate(from, { replace: true })
       } else {
         setError('토큰을 받아오지 못했습니다.')
       }
@@ -60,9 +65,6 @@ const LoginForm = () => {
           <div className="text-[18px] font-semibold tracking-[-0.3px] text-dispatch-text">
             119 수보 시스템
           </div>
-          <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px] mt-1">
-            DISPATCH · OPERATOR LOGIN
-          </div>
         </div>
 
         {/* Divider */}
@@ -71,7 +73,7 @@ const LoginForm = () => {
         <form onSubmit={handleLogin}>
           {/* ID */}
           <div className="mb-[18px]">
-            <label className={LABEL_CLASS}>아이디 · ID</label>
+            <label className={LABEL_CLASS}>아이디</label>
             <input
               type="text"
               placeholder="요원 아이디 입력"
@@ -83,7 +85,7 @@ const LoginForm = () => {
 
           {/* Password */}
           <div className="mb-6">
-            <label className={LABEL_CLASS}>비밀번호 · PASSWORD</label>
+            <label className={LABEL_CLASS}>비밀번호</label>
             <input
               type="password"
               placeholder="••••••••"
@@ -95,8 +97,8 @@ const LoginForm = () => {
 
           {/* Error */}
           {error && (
-            <div className="py-2.5 px-[13px] mb-4 bg-dispatch-red-soft ring-1 ring-inset ring-dispatch-red-edge rounded-[5px] text-[#fca5a5] font-mono text-[11px] tracking-[0.3px]">
-              ✖ {error}
+            <div className="py-2.5 px-[13px] mb-4 bg-dispatch-red-soft ring-1 ring-inset ring-dispatch-red-edge rounded-[5px] text-[#fca5a5] text-[12px]">
+              {error}
             </div>
           )}
 
@@ -143,10 +145,6 @@ const LoginForm = () => {
           </div>
         </form>
 
-        {/* Footer */}
-        <div className="mt-7 pt-5 border-t border-dispatch-line text-center font-mono text-[9.5px] text-dispatch-textMuted tracking-[1px]">
-          AUTHORIZED PERSONNEL ONLY · 권한 있는 요원 전용
-        </div>
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FileText } from 'lucide-react'
 import { useManualStore } from '@/stores/useManualStore'
 import { useCallStore } from '@/stores/useCallStore'
 import { authFetch } from '@/lib/authFetch'
@@ -35,8 +36,8 @@ function ManualCard({ manual, isTop, isSelected, onClick }: {
       } ${ringClass}`}
     >
       {isTop && (
-        <div className="absolute -top-[7px] right-2 font-mono text-[8.5px] font-bold tracking-[1.2px] bg-dispatch-blue text-white py-0.5 px-[5px] rounded-[3px]">
-          TOP
+        <div className="absolute -top-[7px] right-2 text-[9px] font-bold bg-dispatch-blue text-white py-0.5 px-[5px] rounded-[3px]">
+          1순위
         </div>
       )}
       <div className="flex justify-between items-baseline gap-1.5">
@@ -102,12 +103,14 @@ const ManualSection = () => {
       {/* Title bar */}
       <div className="pt-4 pb-3.5 px-6 border-b border-dispatch-lineSoft flex items-center gap-4 shrink-0">
         <div className="flex-1 min-w-0">
-          <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.5px] mb-1">
-            {selectedManual ? 'SELECTED MANUAL · 선택된 매뉴얼' : 'ASSISTED DIAGNOSIS · 유사도 분석'}
-          </div>
           <div className="text-xl font-semibold tracking-[-0.5px] text-dispatch-text">
-            {selectedManual ? selectedManual.title : '통화 내용 기반 유사 매뉴얼 추천'}
+            {selectedManual ? selectedManual.title : '유사 매뉴얼 추천'}
           </div>
+          {selectedManual && (
+            <div className="text-xs text-dispatch-textDim mt-1">
+              유사도 {selectedManual.similarity}%
+            </div>
+          )}
         </div>
         {selectedManual && (
           <button
@@ -122,28 +125,25 @@ const ManualSection = () => {
       {/* Detail area */}
       <div className="dispatch-scroll flex-1 min-h-0 overflow-y-auto py-[18px] px-6">
         {!selectedManual ? (
-          <div className="h-full min-h-[200px] flex flex-col items-center justify-center gap-3.5 text-dispatch-textMuted bg-dispatch-card ring-1 ring-inset ring-dispatch-lineSoft rounded-md p-8">
-            <div className="w-[54px] h-[54px] rounded-[27px] bg-dispatch-elev ring-1 ring-inset ring-dispatch-line flex items-center justify-center font-mono text-xl text-dispatch-textMuted">
-              §
-            </div>
-            <div className="text-[13px] text-dispatch-textDim">아직 불러온 매뉴얼이 없습니다.</div>
-            <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1px]">
-              ↓ 아래 매뉴얼 카드를 선택해 주세요
+          <div className="h-full min-h-[200px] flex flex-col items-center justify-center gap-3 text-dispatch-textMuted bg-dispatch-card ring-1 ring-inset ring-dispatch-lineSoft rounded-md p-8">
+            <FileText size={28} className="text-dispatch-textMuted" strokeWidth={1.5} />
+            <div className="text-[13px] text-dispatch-textDim">
+              아래 매뉴얼 카드를 선택하면 상세 내용이 표시됩니다.
             </div>
           </div>
         ) : (
           <>
             <div className="bg-dispatch-card rounded-md ring-1 ring-inset ring-dispatch-line pt-4 pb-4 px-5 mb-3">
-              <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px] mb-2">
-                §1 · 임상적 특징
+              <div className="text-xs font-semibold text-dispatch-textDim mb-2">
+                임상적 특징
               </div>
               <div className="text-[13.5px] leading-[1.75] text-[#cbd5e1]">
                 {selectedManual.clinicalFeatures}
               </div>
             </div>
             <div className="bg-dispatch-card rounded-md ring-1 ring-inset ring-dispatch-line pt-4 pb-4 px-5">
-              <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px] mb-2.5">
-                §2 · 환자평가 필수항목
+              <div className="text-xs font-semibold text-dispatch-textDim mb-2.5">
+                환자평가 필수항목
               </div>
               <div className="text-[13.5px] leading-[1.8] text-[#cbd5e1] whitespace-pre-wrap">
                 {selectedManual.patientAssessment}
@@ -155,10 +155,8 @@ const ManualSection = () => {
 
       {/* CTA */}
       <div className="border-t border-dispatch-lineSoft py-3 px-6 flex items-center gap-3 bg-dispatch-card shrink-0">
-        <div className="flex-1 font-mono text-[10px] text-dispatch-textMuted tracking-[1px]">
-          {selectedManual
-            ? `MATCH · ${selectedManual.similarity}% · 매뉴얼 선택됨`
-            : 'WAITING · 매뉴얼을 선택하면 상세가 위에 표시됩니다'}
+        <div className="flex-1 text-[11px] text-dispatch-textMuted">
+          {selectedManual ? '매뉴얼이 선택되었습니다.' : ''}
         </div>
         <button
           id="manual-check-button"
@@ -174,8 +172,8 @@ const ManualSection = () => {
       {cards.length > 0 && (
         <div className="border-t border-dispatch-line bg-dispatch-bg pt-3 pb-3.5 px-3.5 shrink-0">
           <div className="flex items-baseline gap-2.5 px-0.5 pb-2">
-            <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1.4px]">
-              SUGGESTED · 유사 매뉴얼 Top 6
+            <div className="text-xs font-medium text-dispatch-textDim">
+              추천 매뉴얼
             </div>
             <div className="flex-1 h-px bg-dispatch-lineSoft" />
           </div>

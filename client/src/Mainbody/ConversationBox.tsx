@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { PhoneOff } from 'lucide-react'
 import { useCallStore } from '@/stores/useCallStore'
 import { useHotkey } from '@/hooks/useHotkey'
 import { buildSseUrl } from '@/lib/authFetch'
@@ -23,7 +24,7 @@ function Bubble({ sender, text, time, partial = false }: {
       className={`flex flex-col mb-3.5 ${isAgent ? 'items-end' : 'items-start'} ${partial ? 'opacity-75' : ''}`}
     >
       <div
-        className={`text-[10px] font-semibold tracking-[1px] uppercase font-mono mb-1 px-0.5 ${
+        className={`text-[11px] font-medium mb-1 px-0.5 ${
           isAgent ? 'text-[#7aa8f5]' : 'text-dispatch-textMuted'
         }`}
       >
@@ -120,11 +121,8 @@ const ConversationBox = () => {
       {/* Panel header */}
       <div className="flex items-center px-3.5 py-3 border-b border-dispatch-lineSoft shrink-0">
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] font-semibold tracking-[1.6px] uppercase text-dispatch-textMuted font-mono">
-            {active ? 'LIVE TRANSCRIPT' : 'IDLE'}
-          </div>
-          <div className="text-sm font-semibold text-dispatch-text tracking-[-0.2px] mt-px">
-            {active ? '응급 신고 통화 내용' : '수신된 통화가 없습니다'}
+          <div className="text-sm font-semibold text-dispatch-text tracking-[-0.2px]">
+            {active ? '통화 내용' : '수신된 통화가 없습니다'}
           </div>
         </div>
         {active && (
@@ -141,14 +139,9 @@ const ConversationBox = () => {
 
       {/* Body */}
       {!active ? (
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-3.5 text-dispatch-textMuted p-8">
-          <div className="w-[54px] h-[54px] rounded-[27px] bg-dispatch-card ring-1 ring-inset ring-dispatch-line flex items-center justify-center font-mono text-xl text-dispatch-textMuted">
-            ◌
-          </div>
-          <div className="text-[13px] text-dispatch-textDim">현재 진행 중인 통화가 없습니다.</div>
-          <div className="font-mono text-[10px] text-dispatch-textMuted tracking-[1px]">
-            STANDBY · 통화 수신 대기 중
-          </div>
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-3 text-dispatch-textMuted p-8">
+          <PhoneOff size={28} className="text-dispatch-textMuted" strokeWidth={1.5} />
+          <div className="text-[13px] text-dispatch-textDim">통화 수신 대기 중입니다.</div>
         </div>
       ) : (
         <div className="dispatch-scroll flex-1 min-h-0 overflow-y-auto pt-3.5 px-3.5 pb-2">
@@ -175,16 +168,16 @@ const ConversationBox = () => {
       )}
 
       {/* Footer */}
-      <div className="px-3.5 py-2.5 border-t border-dispatch-lineSoft flex justify-between font-mono text-[10px] text-dispatch-textMuted tracking-[1px] shrink-0">
+      <div className="px-3.5 py-2.5 border-t border-dispatch-lineSoft flex justify-between text-[11px] text-dispatch-textMuted shrink-0">
         {active ? (
           <>
-            <span>CALL · {conversations.length} 발화</span>
-            <span>DURATION · {mm}:{ss}</span>
+            <span>발화 {conversations.length}건</span>
+            <span className="font-mono tabular-nums">{mm}:{ss}</span>
           </>
         ) : (
           <>
-            <span>STANDBY</span>
-            <span>00:00</span>
+            <span>대기 중</span>
+            <span className="font-mono tabular-nums">00:00</span>
           </>
         )}
       </div>

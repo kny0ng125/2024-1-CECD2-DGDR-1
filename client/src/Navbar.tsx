@@ -53,9 +53,6 @@ const NavbarForm = () => {
         </div>
         <div className="text-sm font-semibold tracking-[-0.2px]">
           119 수보 시스템
-          <span className="text-dispatch-textMuted font-normal ml-2 text-[11px] font-mono">
-            DISPATCH · v2.4
-          </span>
         </div>
       </div>
 
@@ -85,14 +82,6 @@ const NavbarForm = () => {
 
       {/* Right side */}
       <div className="flex items-center gap-[18px] text-xs">
-        <div className="flex items-center gap-1.5">
-          <span
-            className="inline-block w-1.5 h-1.5 rounded-full bg-dispatch-green"
-            style={{ boxShadow: '0 0 8px #22c55e' }}
-          />
-          <span className="font-mono text-dispatch-textDim">SHIFT · DAY</span>
-        </div>
-
         {userId && (
           <div className="flex items-center gap-2">
             <div className="w-[22px] h-[22px] rounded-full bg-dispatch-blue-soft text-[#93c5fd] flex items-center justify-center text-[11px] font-semibold ring-1 ring-inset ring-dispatch-blue-edge">

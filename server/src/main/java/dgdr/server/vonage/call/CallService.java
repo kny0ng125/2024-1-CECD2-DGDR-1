@@ -1,5 +1,6 @@
 package dgdr.server.vonage.call;
 
+import dgdr.server.vonage.privacy.RetentionPolicy;
 import dgdr.server.vonage.transcript.CallTranscriptCache;
 import dgdr.server.vonage.transcript.TranscriptEntry;
 import lombok.RequiredArgsConstructor;
@@ -97,6 +98,10 @@ public class CallService {
             return;
         }
 
+        // 전사본은 민감정보이므로 저장 시점에 보존기간 만료 시각을 함께 확정한다.
+        // 이후 파기 배치가 이 값만 보고 삭제 대상을 판단한다.
+        LocalDateTime expiresAt = LocalDateTime.now().plusDays(RetentionPolicy.CALL_RECORD_DAYS);
+
         List<TranscriptEntry> finals = transcriptCache.finalEntries(callId);
         List<CallRecord> records = finals.stream()
                 .map(e -> CallRecord.builder()
@@ -104,6 +109,7 @@ public class CallService {
                         .speaker(e.speaker())
                         .transcription(e.text())
                         .speakerPhoneNumber(e.speakerPhone())
+                        .retentionExpiresAt(expiresAt)
                         .build())
                 .toList();
         callRecordRepository.saveAll(records);
