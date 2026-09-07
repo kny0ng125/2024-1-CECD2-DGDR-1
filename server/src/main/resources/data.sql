@@ -17,11 +17,25 @@ INSERT INTO users (user_id, name, password, phone) VALUES
 
 -- ---------------------------------------------------------------------
 -- 통화 세션
+--   start_time  = 벨이 울리기 시작한 시각
+--   answer_time = 요원이 수락한 시각 (미응답이면 NULL)
+--   둘의 차이가 접수 지연이다. 시드에도 몇 초씩 차이를 둬서
+--   지표 계산이 실제로 동작하는지 볼 수 있게 한다.
 -- ---------------------------------------------------------------------
-INSERT INTO calls (id, start_time, end_time, user_id) VALUES
-  (1, DATE_SUB(NOW(), INTERVAL 2 HOUR),  DATE_SUB(NOW(), INTERVAL 115 MINUTE), 'test01'),
-  (2, DATE_SUB(NOW(), INTERVAL 1 DAY),   DATE_SUB(NOW(), INTERVAL 1435 MINUTE), 'test01'),
-  (3, DATE_SUB(NOW(), INTERVAL 3 DAY),   DATE_SUB(NOW(), INTERVAL 4315 MINUTE), 'test02');
+INSERT INTO calls (id, start_time, answer_time, end_time, state, user_id) VALUES
+  -- 3초 만에 수락
+  (1, DATE_SUB(NOW(), INTERVAL 7200 SECOND), DATE_SUB(NOW(), INTERVAL 7197 SECOND),
+      DATE_SUB(NOW(), INTERVAL 115 MINUTE),  'ENDED', 'test01'),
+  -- 8초 만에 수락
+  (2, DATE_SUB(NOW(), INTERVAL 86400 SECOND), DATE_SUB(NOW(), INTERVAL 86392 SECOND),
+      DATE_SUB(NOW(), INTERVAL 1435 MINUTE),  'ENDED', 'test01'),
+  -- 2초 만에 수락
+  (3, DATE_SUB(NOW(), INTERVAL 259200 SECOND), DATE_SUB(NOW(), INTERVAL 259198 SECOND),
+      DATE_SUB(NOW(), INTERVAL 4315 MINUTE),   'ENDED', 'test02'),
+  -- 미응답 통화. 수락되지 않아 전사 기록이 없지만 행은 남는다 —
+  -- 놓친 신고가 기록에서 사라지면 안 된다.
+  (4, DATE_SUB(NOW(), INTERVAL 30 MINUTE), NULL,
+      DATE_SUB(NOW(), INTERVAL 29 MINUTE), 'ENDED', 'test01');
 
 -- ---------------------------------------------------------------------
 -- 전사 기록 (합성 시나리오)

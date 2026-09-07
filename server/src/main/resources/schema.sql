@@ -47,13 +47,20 @@ CREATE TABLE users (
 --   전사본과 별도의 수명을 가진다.
 -- ---------------------------------------------------------------------
 CREATE TABLE calls (
-    id         BIGINT      NOT NULL AUTO_INCREMENT,
-    start_time DATETIME    NOT NULL COMMENT '통화 시작 시각',
-    end_time   DATETIME    NULL     COMMENT '통화 종료 시각(진행 중이면 NULL)',
-    user_id    VARCHAR(50) NULL     COMMENT '수보 담당 요원',
+    id          BIGINT      NOT NULL AUTO_INCREMENT,
+    start_time  DATETIME    NOT NULL COMMENT '통화 도달 시각(벨 울리기 시작)',
+    -- start_time 과 answer_time 을 나눠 두는 이유: 둘의 차이가 접수 지연이며
+    -- 상황실 운영의 핵심 지표다. 하나로 합치면 산출 자체가 불가능해진다.
+    -- 미응답으로 끝난 통화는 이 값이 NULL 로 남아 그 자체로 구분된다.
+    answer_time DATETIME    NULL     COMMENT '요원 수락 시각(미응답이면 NULL)',
+    end_time    DATETIME    NULL     COMMENT '통화 종료 시각(진행 중이면 NULL)',
+    state       VARCHAR(20) NOT NULL DEFAULT 'OFFERED'
+                            COMMENT 'OFFERED | ANSWERED | ENDED',
+    user_id     VARCHAR(50) NULL     COMMENT '수보 담당 요원',
     PRIMARY KEY (id),
     KEY idx_calls_user_start (user_id, start_time),
     KEY idx_calls_start (start_time),
+    KEY idx_calls_state (state),
     CONSTRAINT fk_calls_user
         FOREIGN KEY (user_id) REFERENCES users (user_id)
         ON DELETE SET NULL

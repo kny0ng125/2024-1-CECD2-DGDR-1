@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Phone } from 'lucide-react'
-import { useCallStore } from '@/stores/useCallStore'
+import { useCallStore, useIsCallActive } from '@/stores/useCallStore'
 
 function fmtElapsed(sec: number): string {
   const h = Math.floor(sec / 3600)
@@ -11,7 +11,8 @@ function fmtElapsed(sec: number): string {
 }
 
 const IncidentHeader = () => {
-  const { isCallActive, callStartedAt } = useCallStore()
+  const { callStartedAt } = useCallStore()
+  const isCallActive = useIsCallActive()
   const [elapsed, setElapsed] = useState(0)
 
   useEffect(() => {

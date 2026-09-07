@@ -29,6 +29,10 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
+      # ⚠ 지정하지 않으면 스크립트를 플랫폼 기본 인코딩으로 읽는다.
+      #   윈도우 한국어 환경에서는 MS949 이므로 data.sql 의 한글 시드가
+      #   깨진 채 DB 에 적재된다. 파일은 UTF-8 인데 읽는 쪽이 다른 것이다.
+      encoding: UTF-8
       # defer-datasource-initialization 은 기본값(false)을 유지해야 한다.
       # true 로 두면 스크립트가 Hibernate 이후에 실행되어
       # ddl-auto: validate 가 테이블을 찾지 못하고 기동에 실패한다.
@@ -64,6 +68,74 @@ clova:
   invoke-url: ${CLOVA_INVOKE_URL:}
   secret: ${CLOVA_SECRET:}
 
+# ---------------------------------------------------------------------
+# SIP 게이트웨이 연동 (Asterisk AudioSocket)
+#
+#   서버는 SIP 스택을 갖지 않는다. INVITE/SDP 협상, RTP, jitter buffer 는
+#   게이트웨이가 처리하고, 서버는 통화 leg 당 TCP 연결 하나로 순수 PCM 만
+#   주고받는다. 통화 소스 교체는 이 설정만으로 끝난다 — 도메인 코어
+#   (telephony.core)는 어떤 소스가 붙었는지 알지 못한다.
+#
+#   Asterisk dialplan 예시는 docs/sip-gateway.md 참고.
+# ---------------------------------------------------------------------
+sip:
+  audiosocket:
+    # 기본 off. SIP 게이트웨이가 없는 개발 환경이 정상 상태다.
+    enabled: ${SIP_AUDIOSOCKET_ENABLED:false}
+    port: ${SIP_AUDIOSOCKET_PORT:9092}
+    # ⚠ AudioSocket 프로토콜에는 인증이 없다. 이 포트에 붙을 수 있으면
+    #   누구나 임의의 통화를 열고 오디오를 주입할 수 있으므로
+    #   절대 공인 IP 에 바인딩하지 말 것. 게이트웨이가 다른 호스트면
+    #   사설망 주소로 바꾸고 방화벽으로 출처를 제한한다.
+    bind-address: ${SIP_AUDIOSOCKET_BIND:127.0.0.1}
+    # slin(8kHz) | slin16(16kHz). Asterisk dialplan 설정과 반드시 일치시킬 것.
+    # 8kHz 로 받으면 서버가 CLOVA 요구 포맷(16kHz)으로 리샘플링한다.
+    codec: ${SIP_AUDIOSOCKET_CODEC:slin}
+    max-connections: 64
+    handshake-timeout: 5s
+  # 호 제어(수락/거절/종료). 미디어(AudioSocket)와 별도 설정인 것이 핵심 —
+  # 실전 CTI 가 콜 컨트롤 경로와 미디어 경로를 분리하는 것과 같은 이유다.
+  # ARI 가 끊겨도 이미 붙은 통화의 오디오와 전사는 계속 흐른다.
+  ari:
+    # 꺼져 있으면 수락 흐름이 없다(dialplan 이 즉시 Answer). 벨 울림도 없다.
+    enabled: ${SIP_ARI_ENABLED:false}
+    base-url: ${SIP_ARI_URL:http://127.0.0.1:8088}
+    username: ${SIP_ARI_USER:dgdr}
+    password: ${SIP_ARI_PASSWORD:}
+    # dialplan 의 Stasis(<name>) 와 일치해야 한다.
+    app-name: dgdr
+    # 수락 후 채널을 되돌려 보낼 dialplan 위치 (AudioSocket 이 여기서 실행된다)
+    media-context: dgdr-media
+    media-extension: start
+    # 이 시간 안에 수락되지 않으면 끊고 미응답으로 기록한다.
+    ring-timeout: 45s
+    reconnect-interval: 5s
+
+  gateway:
+    # 통화 등록 API(POST /api/v1/sip/registrations) 인증용 공유 비밀.
+    # ARI 모드에서는 서버가 티켓을 직접 등록하므로 이 API 가 필요 없다.
+    # 비어 있으면 등록 엔드포인트는 모든 요청을 503 으로 거절한다.
+    # (설정 누락이 무인증 개방으로 이어지지 않게 하기 위함)
+    shared-secret: ${SIP_GATEWAY_SECRET:}
+    registration-ttl: 60s
+
+# ---------------------------------------------------------------------
+# 개발용 시나리오 재생 (dev 프로파일 전용)
+#   전화망 없이 통화 개설 → 화자별 발화 → 종료 전 구간을 재현한다.
+#   실제 통화와 같은 코어 경로를 타므로, 여기서 되는 것은 실제로도 된다.
+# ---------------------------------------------------------------------
+dev:
+  fake-call:
+    enabled: ${DEV_FAKE_CALL:false}
+
+# ---------------------------------------------------------------------
+# 매뉴얼 검색 백엔드
+#   stub      : 외부 의존 없이 도는 규칙 기반 대체. AWS 자격증명 없이 데모 가능.
+#   sagemaker : 학습한 KorDPR 을 SageMaker 엔드포인트로 호출. aws.* 값이 필요하다.
+# ---------------------------------------------------------------------
+manual:
+  retriever: ${MANUAL_RETRIEVER:stub}
+
 logging:
   level:
-    dgdr.server.vonage: DEBUG
+    dgdr.server: DEBUG

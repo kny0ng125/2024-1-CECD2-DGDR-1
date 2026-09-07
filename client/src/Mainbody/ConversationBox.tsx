@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { PhoneOff } from 'lucide-react'
-import { useCallStore } from '@/stores/useCallStore'
+import { useCallStore, useIsCallActive } from '@/stores/useCallStore'
 import { useHotkey } from '@/hooks/useHotkey'
 import { buildSseUrl } from '@/lib/authFetch'
 
@@ -53,7 +53,8 @@ function Bubble({ sender, text, time, partial = false }: {
 }
 
 const ConversationBox = () => {
-  const { callId, isCallActive, callStartedAt } = useCallStore()
+  const { callId, callStartedAt } = useCallStore()
+  const isCallActive = useIsCallActive()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [partials, setPartials]           = useState<Map<'agent' | 'patient', string>>(new Map())
   const [elapsed, setElapsed]             = useState(0)
